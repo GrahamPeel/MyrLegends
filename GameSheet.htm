@@ -2,405 +2,236 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CharacterSheet - LegendsOfMyradon</title>
+    <link rel="stylesheet" href="/css/site.css" />
+
     <style type="text/css">
-        * {
-            margin: 0; padding: 0;
-        }
-        body {
-            font-family: sans-serif;
-            font-size: 18px;
-        }
-        .gridContainer {
-            display: grid;
-        }
-        #bodyWrapper {
-            margin: 2%;
-            border: solid 1px #eaeaea;
-        }
-        .section {
-            border-top: solid 1px #eaeaea;
-            padding: 15px;
-        }
-        .section:first-child {
-            border: 0;
-        }
-        #_BasicStats {
-            grid-template-columns: 1fr 1fr 1fr;
-        }
-        #_BABSaves {
-            grid-template-columns: 2fr 3fr;
-        }
-        #_Attks {
-            grid-template-columns: 2fr 3fr;
-        }
-        #_Slikz {
-            grid-template-columns: 3fr 2fr;
-        }
-        #_Atr09 {
-            grid-template-columns: 3fr 2fr;
-        }
-        #_Invty table {
-            width: 100%;
-        }
-        .noteSection {
-            /*overflow-y: scroll;
-            max-height: 150px;*/
-        }
-        .noteSection div {
-            margin: 0 0 10px 0;
-            font-size: 15px;
-        }
-        table {
-            border-collapse: collapse;
-            border: solid 1px #eaeaea;
-        }
-        td, th {
-            border: solid 1px #eaeaea;
-            padding: 3px;
-        }
-        .subtle {
-            color: #ccc;
+        input {
             font-size: 16px;
-            font-style: italic;
+            width: 100px;
+        }
+
+        #charsheetWrapper {
+            overflow: hidden;
+            margin: 0 0 20px 0;
         }
     </style>
+
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js" crossorigin="anonymous" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.12/handlebars.min.js"></script>
+
+    <script type="text/javascript">
+        function EndRound() {
+            var tbl = $("#cooldownTbl");
+            tbl.find("tbody tr").each(function () {
+                var textInput = $(this).find("td").eq(0).find("input");
+                var text = textInput.val();
+                var countDownInput = $(this).find("td").eq(1).find("input");
+                var countDownVal = countDownInput.val();
+                if (!!text) {
+                    var count = parseInt(countDownVal);
+                    console.log(count + " " + countDownVal);
+                    if (isNaN(count)) {
+                        alert("Bad countdown: " + countDownVal);
+                        return;
+                    }
+                    if (count == 0) {
+                        countDownInput.val("");
+                        textInput.val("");
+                    }
+                    else {
+                        count -= 1;
+                        countDownInput.val(count);
+                    }
+                }
+            });
+        }
+    </script>
 </head>
 <body>
-    <div id="bodyWrapper">
-        <div class="section">
-            <h3 style="float: right;">Owner Name</h3>
-            <h2>Name name name of Name</h2>
-            <div>Title1 7 / Other Title 2 / Extra Long Title 1</div>
-        </div>
-        <div class="section gridContainer" id="_BasicStats">
-            <div>
-                <table>
-                    <tr>
-                        <td>SDF</td>
-                        <td>+2</td>
-                        <td>16</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>DW3</td>
-                        <td>-1</td>
-                        <td>9</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>CNY</td>
-                        <td>-3</td>
-                        <td>5</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>INY</td>
-                        <td>+4</td>
-                        <td>18</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>W34</td>
-                        <td>+1</td>
-                        <td>10</td>
-                        <td>+2</td>
-                    </tr>
-                    <tr>
-                        <td>CAE</td>
-                        <td>+3</td>
-                        <td>17</td>
-                        <td>-</td>
-                    </tr>
-                </table>
-            </div>
-            <div>
-                <table>
-                    <tr>
-                        <td>Rwer</td>
-                        <td>Tuckly</td>
-                    </tr>
-                    <tr>
-                        <td>Size</td>
-                        <td>Medium</td>
-                    </tr>
-                    <tr>
-                        <td>Algn211</td>
-                        <td>C/N</td>
-                    </tr>
-                    <tr>
-                        <td>Source</td>
-                        <td>30</td>
-                    </tr>
-                    <tr>
-                        <td>Lever</td>
-                        <td>9</td>
-                    </tr>
-                    <tr>
-                        <td>ACP</td>
-                        <td>123</td>
-                    </tr>
-                </table>
-            </div>
-            <div>
-                <div class="noteSection">
-                    <div>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque</div>
-                    <div>Weaque ipsa quae ab illo inventore veritatis</div>
-                    <div>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut</div>
-                </div>
-            </div>
-        </div>
-        <div class="section gridContainer" id="_BABSaves">
-            <div>
-                <table>
+
+
+    <div class="container body-content">
+
+        <div id="charsheetWrapper">
+
+            <div style="float: right; margin: 0 100px 0 0;">
+                <h3>Cooldown Counter <button onclick="EndRound(); return false;">End Round</button></h3>
+                <table style="margin: 0 0 50px 0;" id="cooldownTbl">
                     <thead>
                         <tr>
-                            <th></th>
-                            <th>L000</th>
-                            <th>BAB</th>
-                            <th>F000</th>
-                            <th>R000</th>
-                            <th>W000</th>
+                            <th>Effect</th>
+                            <th>Countdown</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Title1</td>
-                            <td>7</td>
-                            <td>4</td>
-                            <td>2</td>
-                            <td>3</td>
-                            <td>2</td>
+                            <td><input type="text" value="Thing 1" /></td>
+                            <td><input type="number" value="3" min="0" max="20" /></td>
                         </tr>
                         <tr>
-                            <td>Other Title</td>
-                            <td>2</td>
-                            <td>2</td>
-                            <td>0</td>
-                            <td>3</td>
-                            <td>2</td>
+                            <td><input type="text" value="Thing 1" /></td>
+                            <td><input type="number" value="2" min="0" max="20" /></td>
                         </tr>
                         <tr>
-                            <td>Extra Long Title</td>
-                            <td>1</td>
-                            <td>0</td>
-                            <td>0</td>
-                            <td>1</td>
-                            <td>2</td>
+                            <td><input type="text" /></td>
+                            <td><input type="number" min="0" max="20" /></td>
                         </tr>
                     </tbody>
                 </table>
-            </div>
-            <div>
-                <div class="noteSection">
-                    <div>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque</div>
-                    <div>Weaque ipsa quae ab illo inventore veritatis</div>
-                    <div>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut</div>
-                    <div>Qarchitecto beatae vitae dicta</div>
-                    <div>Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi</div>
-                    <div>Inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas</div>
-                </div>
-            </div>
-        </div>
-        <div class="section gridContainer" id="_Attks">
-            <div>
+
+                <h3>Towers</h3>
+
                 <table>
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>BAB</th>
-                            <th>SDF</th>
-                            <th>DW3</th>
-                            <th>S000</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>M6666</td>
-                            <td>7</td>
-                            <td>+2</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td>+9</td>
-                        </tr>
-                        <tr>
-                            <td>R44444</td>
-                            <td>7</td>
-                            <td>-</td>
-                            <td>-1</td>
-                            <td>-</td>
-                            <td>+6</td>
-                        </tr>
-                    </tbody>
+                    <tr>
+                        <th></th>
+                        <th>Player 1</th>
+                        <th>Player 2</th>
+                    </tr>
+                    <tr>
+                        <td>OTT</td>
+                        <td><input type="text" value="" /></td>
+                        <td><input type="text" value="" /></td>
+                    </tr>
+                    <tr>
+                        <td>OTM</td>
+                        <td><input type="text" value="" /></td>
+                        <td><input type="text" value="" /></td>
+                    </tr>
+                    <tr>
+                        <td>OTB</td>
+                        <td><input type="text" value="" /></td>
+                        <td><input type="text" value="" /></td>
+                    </tr>
                 </table>
-                <div>
-                    <div>CMB: 20 <span class="subtle">Sed ut perspiciatis unde omnis iste natus</span></div>
-                    <div>CMD: 8 <span class="subtle">Weaque ipsa quae ab illo inventore veritatis</span></div>
-                </div>
+
+
+
             </div>
-            <div>
-                <div class="noteSection">
-                    <div>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque</div>
-                    <div>Weaque ipsa quae ab illo inventore veritatis</div>
-                    <div>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut</div>
-                    <div>Qarchitecto beatae vitae dicta</div>
-                </div>
-            </div>
-        </div>
-        <div class="section gridContainer" id="_Slikz">
-            <div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Sli00 N777</th>
-                            <th>T2222</th>
-                            <th>ACP</th>
-                            <th>Staa</th>
-                            <th>M0d</th>
-                            <th>R222</th>
-                            <th>C1111</th>
-                            <th>O666</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>A3333333</td>
-                            <td>+4</td>
-                            <td>-3</td>
-                            <td>DW3</td>
-                            <td>-1</td>
-                            <td>3</td>
-                            <td>0</td>
-                            <td>1</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div>
-                <div class="noteSection">
-                    <div>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque</div>
-                    <div>Weaque ipsa quae ab illo inventore veritatis</div>
-                    <div>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut</div>
-                    <div>Qarchitecto beatae vitae dicta</div>
-                    <div>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque</div>
-                    <div>Weaque ipsa quae ab illo inventore veritatis</div>
-                    <div>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut</div>
-                    <div>Qarchitecto beatae vitae dicta</div>
-                    <div>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque</div>
-                    <div>Weaque ipsa quae ab illo inventore veritatis</div>
-                    <div>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut</div>
-                    <div>Qarchitecto beatae vitae dicta</div>
-                </div>
-            </div>
-        </div>
-        <div class="section gridContainer" id="_Atr09">
-            <div>
-                <table>
-                    <tbody>
-                        <tr>
-                            <td>Base</td>
-                            <td>10</td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Atr09</td>
-                            <td>4</td>
-                            <td>Chrtgg +3, +2[e4444]; Blah +A</td>
-                        </tr>
-                        <tr>
-                            <td>Defff</td>
-                            <td>1</td>
-                            <td>R444 !! Dpppp +`[ded]</td>
-                        </tr>
-                        <tr>
-                            <td>N6666</td>
-                            <td>0</td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>DWF</td>
-                            <td>0</td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>SH**</td>
-                            <td>0</td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div>
-                <div class="noteSection">
-                    <div>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque</div>
-                    <div>Weaque ipsa quae ab illo inventore veritatis</div>
-                    <div>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut</div>
-                    <div>Qarchitecto beatae vitae dicta</div>
-                    <div>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque</div>
-                    <div>Weaque ipsa quae ab illo inventore veritatis</div>
-                    <div>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut</div>
-                    <div>Qarchitecto beatae vitae dicta</div>
-                </div>
-            </div>
-        </div>
-        <div class="section" id="_Invty">
+
+            <h3>Character Information</h3>
+
             <table>
-                <thead>
-                    <tr>
-                        <th>N777</th>
-                        <th>Val</th>
-                        <th>Descri</th>
-                        <th>Eqd?</th>
-                        <th>Sl00</th>
-                    </tr>
-                </thead>
                 <tbody>
                     <tr>
-                        <td>nvcnvcn</td>
-                        <td>50dd</td>
-                        <td>Hysudsduifsfs...</td>
-                        <td>Yes</td>
-                        <td>None</td>
+                        <th></th>
+                        <th>Player 1</th>
+                        <th>Player 2</th>
+                        <th>Player 1</th>
+                        <th>Player 2</th>
                     </tr>
                     <tr>
-                        <td>Weerrrrr</td>
-                        <td>6dd</td>
-                        <td>Hysudsduifsfs...</td>
-                        <td>Yes</td>
-                        <td>None</td>
+                        <td>Initiative</td>
+                        <td><input type="text" value="1" readonly /></td>
+                        <td><input type="text" value="2" readonly /></td>
+                        <td><input type="text" value="3" readonly /></td>
+                        <td><input type="text" value="4" readonly /></td>
                     </tr>
                     <tr>
-                        <td>6767678fdgdfg</td>
-                        <td>1234dd</td>
-                        <td>sdfsdfs...</td>
-                        <td>No</td>
-                        <td>None</td>
+                        <td>Character</td>
+                        <td><input type="text" value="Tortle" /></td>
+                        <td><input type="text" value="Necromancy" /></td>
+                        <td><input type="text" value="Bandit King" /></td>
+                        <td><input type="text" value="Crusader" /></td>
+                    </tr>
+
+                    <tr>
+                        <td>Char. Level</td>
+                        <td><input type="number" value="1" min="1" max="11" /></td>
+                        <td><input type="number" value="1" min="1" max="11" /></td>
+                        <td><input type="number" value="1" min="1" max="11" /></td>
+                        <td><input type="number" value="1" min="1" max="11" /></td>
                     </tr>
                     <tr>
-                        <td>nvcnvcn</td>
-                        <td>3dd</td>
-                        <td></td>
-                        <td>No</td>
-                        <td>None</td>
+                        <td>Current Exp</td>
+                        <td><input type="number" value="0" min="0" max="30" /></td>
+                        <td><input type="number" value="0" min="0" max="30" /></td>
+                        <td><input type="number" value="0" min="0" max="30" /></td>
+                        <td><input type="number" value="0" min="0" max="30" /></td>
                     </tr>
                     <tr>
-                        <td>nvcnvcn</td>
-                        <td>500dd</td>
-                        <td>Hysudsduifsfs...</td>
-                        <td>No</td>
-                        <td>None</td>
+                        <td>Exp for next level</td>
+                        <td><input type="number" value="2" min="0" max="30" /></td>
+                        <td><input type="number" value="2" min="0" max="30" /></td>
+                        <td><input type="number" value="2" min="0" max="30" /></td>
+                        <td><input type="number" value="2" min="0" max="30" /></td>
                     </tr>
                     <tr>
-                        <td>nvcnvcn</td>
-                        <td>15000dd</td>
-                        <td>HJhsdf 78s 7f8s ...</td>
-                        <td>Yes</td>
-                        <td>None</td>
+                        <td>Base dmg</td>
+                        <td><input type="text" value="1d8+3" /></td>
+                        <td><input type="text" value="1d10+1" /></td>
+                        <td><input type="text" value="1d10+1" /></td>
+                        <td><input type="text" value="1d8+3" /></td>
+                    </tr>
+                    <tr>
+                        <td>Movement</td>
+                        <td><input type="number" value="5" min="0" max="30" /></td>
+                        <td><input type="number" value="5" min="0" max="30" /></td>
+                        <td><input type="number" value="5" min="0" max="30" /></td>
+                        <td><input type="number" value="5" min="0" max="30" /></td>
+                    </tr>
+                    <tr>
+                        <td>Currant health</td>
+                        <td><input type="number" value="" /></td>
+                        <td><input type="number" value="" /></td>
+                        <td><input type="number" value="" /></td>
+                        <td><input type="number" value="" /></td>
+                    </tr>
+                    <tr>
+                        <td>Max health</td>
+                        <td><input type="number" value="" /></td>
+                        <td><input type="number" value="" /></td>
+                        <td><input type="number" value="" /></td>
+                        <td><input type="number" value="" /></td>
+                    </tr>
+                    <tr>
+                        <td>Current mana</td>
+                        <td><input type="number" value="" /></td>
+                        <td><input type="number" value="" /></td>
+                        <td><input type="number" value="" /></td>
+                        <td><input type="number" value="" /></td>
+                    </tr>
+                    <tr>
+                        <td>Max mana</td>
+                        <td><input type="number" value="" /></td>
+                        <td><input type="number" value="" /></td>
+                        <td><input type="number" value="" /></td>
+                        <td><input type="number" value="" /></td>
+                    </tr>
+                    <tr>
+                        <td>Positive mods</td>
+                        <td><input type="text" value="" /></td>
+                        <td><input type="text" value="" /></td>
+                        <td><input type="text" value="" /></td>
+                        <td><input type="text" value="" /></td>
+                    </tr>
+                    <tr>
+                        <td>Negative mods</td>
+                        <td><input type="text" value="" /></td>
+                        <td><input type="text" value="" /></td>
+                        <td><input type="text" value="" /></td>
+                        <td><input type="text" value="" /></td>
+                    </tr>
+                    <tr>
+                        <td>Dodge Chance</td>
+                        <td><input type="text" value="" /></td>
+                        <td><input type="text" value="" /></td>
+                        <td><input type="text" value="" /></td>
+                        <td><input type="text" value="" /></td>
                     </tr>
                 </tbody>
             </table>
+
         </div>
+        <hr />
+        <footer>
+            <p>&copy; 2019 - LegendsOfMyradon</p>
+        </footer>
     </div>
+
+
+
+
 </body>
 </html>
