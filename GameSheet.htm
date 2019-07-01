@@ -4,20 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CharacterSheet - LegendsOfMyradon</title>
-    <link rel="stylesheet" href="/css/site.css" />
-
-    <style type="text/css">
-        input {
-            font-size: 16px;
-            width: 100px;
-        }
-
-        #charsheetWrapper {
-            overflow: hidden;
-            margin: 0 0 20px 0;
-        }
-    </style>
-
+    <link rel="stylesheet" href="/css/main.css" />
     <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js" crossorigin="anonymous" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.12/handlebars.min.js"></script>
 
@@ -51,10 +38,9 @@
 </head>
 <body>
 
+    <div class="mainPageWrapper">
 
-    <div class="container body-content">
-
-        <div id="charsheetWrapper">
+        <div id="charsheetWrapper" class="">
 
             <div style="float: right; margin: 0 100px 0 0;">
                 <h3>Cooldown Counter <button onclick="EndRound(); return false;">End Round</button></h3>
@@ -224,14 +210,8 @@
             </table>
 
         </div>
-        <hr />
-        <footer>
-            <p>&copy; 2019 - LegendsOfMyradon</p>
-        </footer>
+
     </div>
-
-
-
 
 </body>
 </html>
