@@ -4,15 +4,78 @@
     <meta charset="utf-8" />
     <title></title>
     <link rel="stylesheet" href="css/main.css" />
+    <link rel="icon" href="data:;base64,iVBORwOKGO=" />
+
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js" crossorigin="anonymous" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.12/handlebars.min.js"></script>
+    <script type="text/javascript" src="Library.js"></script>
+
+    <script type="text/javascript">
+
+        function StartNewGame() {
+            var newGame = { 'heroCount': Number($("#heroCount").val()), savedItems: "" };
+            SaveGameObj(newGame);
+            window.location = "GameSheet.htm";
+        }
+
+        $(document).ready(function () {
+            if (GetGameObj() != null)
+                $("#gameSheetLink").show();
+        });
+
+    </script>
+
 </head>
 <body>
     <div class="mainPageWrapper">
-        <h1>Heroes of Myradon</h1>
-        <hr />
-        <ul>
-            <li><a href="Calc.htm">Calculator</a></li>
-            <li><a href="GameSheet.htm">Game Sheet</a></li>
-        </ul>
+        <header>
+            <h1>Heroes of Myradon</h1>
+            <!--<a href="Calc.htm">Calculator</a>
+            <a href="GameSheet.htm">Game Sheet</a>
+            <a href="Index.htm">Home</a>-->
+        </header>
+
+        <div>
+
+            <ul>
+                <li><a href="Calc.htm">Calculator</a></li>
+                <li id="gameSheetLink" style="display: none;"><a href="GameSheet.htm">Game Sheet</a></li>
+            </ul>
+
+            <h3 style="margin: 50px 0 10px 0;">Start a New Game Sheet</h3>
+            <form onsubmit="StartNewGame(); return false;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!--<tr>
+                    <td>Name of this Game</td>
+                    <td><input type="text" id="gameName" /></td>
+                </tr>-->
+                        <tr>
+                            <td>Number of Heroes</td>
+                            <td>
+                                <select id="heroCount">
+                                    <option>2</option>
+                                    <option>4</option>
+                                    <option>6</option>
+                                    <option>8</option>
+                                    <option>10</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><input type="submit" value="Start Game" /></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </form>
+        </div>
     </div>
 </body>
 </html>
