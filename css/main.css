@@ -12,12 +12,40 @@ td, th {
     padding: 4px;
 }
 
-h3 {
-    margin: 0 0 25px 0;
+ul {
+    margin: 0 0 20px 30px;
 }
 
+li {
+    margin: 0 0 4px 0;
+}
+
+h1 {
+    font-size: 26px;
+}
+
+h1, h3, hr, header {
+    margin: 0 0 22px 0;
+}
+
+header {
+    overflow: hidden;
+    background: rgba(220, 220, 220, 1);
+    padding: 5px 0;
+}
+
+    header h1 {
+        float: left;
+        margin: 0 0 0 5px;
+    }
+
+    header a {
+        float: right;
+        margin: 4px 5px 0 5px;
+    }
+
 .mainPageWrapper {
-    margin: 18px auto;
+    margin: 0px auto;
     max-width: 1200px;
 }
 
@@ -27,6 +55,3 @@ input {
     padding: 4px;
 }
 
-#charsheetWrapper {
-    overflow: hidden;
-}

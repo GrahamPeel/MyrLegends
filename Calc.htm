@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link rel="stylesheet" href="css/main.css" />
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js" crossorigin="anonymous" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.12/handlebars.min.js"></script>
+
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            var source = document.getElementById("entry-template").innerHTML;
+            var template = Handlebars.compile(source);
+            var context = { diceTypes: [4, 6, 8, 10, 12, 20, 100] };
+            var stuff = template(context);
+            $("table tbody").html(stuff);
+        });
+
+        var currentHPinput = $("#hpCalc_Current");
+        var maxHPinput = $("#hpCalc_Max");
+        var newMaxHPinput = $("#hpCalc_NewMax");
+        var label = $("#hpCalc_Label");
+
+        function handleHPCalc() {
+
+            console.log(currentHPinput.val() + maxHPinput.val() + newMaxHPinput.val());
+
+            var currentHP = parseFloat(currentHPinput.val());
+            var maxHP = parseFloat(maxHPinput.val());
+            var newMaxHP = parseFloat(newMaxHPinput.val());
+            var result = (newMaxHP / maxHP) * currentHP;
+            console.log(result);
+            label.html(result);
+        }
+
+        function Calc(btn) {
+            var logMsg = "";
+            var tr = $(btn).closest("tr");
+
+            var number = parseInt(tr.find(".number").val());
+            number = isNaN(number) ? 1 : number;
+
+            var size = parseInt(tr.find(".size").val());
+
+            var mod = parseInt(tr.find(".mod").val());
+            mod = isNaN(mod) ? 0 : mod;
+
+            logMsg += number + "d" + size;
+            if (mod !== 0)
+                logMsg += (mod >= 0 ? "+" : "") + mod;
+
+            var baseMultiplier = parseFloat(tr.find(".baseMult").val());
+            baseMultiplier = isNaN(baseMultiplier) ? 1 : baseMultiplier;
+
+            var rollingCondMult = 1;
+            var condMultsRaw = $.trim(tr.find(".conditionalMults").val());
+            if (condMultsRaw) {
+                var condMultsArray = $.trim(tr.find(".conditionalMults").val()).split(" ");
+                for (var i = 0; i < condMultsArray.length; i++) {
+                    var conMult = parseFloat(condMultsArray[i]);
+                    if (isNaN(conMult))
+                        alert("Bad Conditional Multiplier: " + conMult);
+                    else
+                        rollingCondMult += conMult;
+                }
+            }
+
+            logMsg += " x" + baseMultiplier + " (base) ";
+            logMsg += " x" + rollingCondMult + "(conditional) ";
+
+            var resultSpan = tr.find(".result");
+            var logSpan = tr.find(".log");
+
+            var rollingTotal = 0;
+            logMsg += " Rolls("
+            for (var i = 1; i <= number; i++) {
+                var roll = Math.floor((Math.random() * size) + 1);
+                logMsg += roll + " ";
+                rollingTotal += roll;
+                //var withMod = roll + mod;
+            }
+            logMsg += ")";
+            rollingTotal += mod;
+
+            rollingTotal = rollingTotal * baseMultiplier * rollingCondMult;
+
+            resultSpan.html(rollingTotal);
+            logSpan.html(logMsg);
+        }
+    </script>
+
+
+</head>
+<body>
+    <div class="mainPageWrapper">
+        <header>
+            <h1>Heroes of Myradon</h1>
+            <a href="Calc.htm">Calculator</a>
+            <a href="GameSheet.htm">Game Sheet</a>
+            <a href="Index.htm">Home</a>
+        </header>
+        <div>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Die</th>
+                        <th>Modifer</th>
+                        <th>Base Multiplier</th>
+                        <th>Conditional Multipliers</th>
+                        <th></th>
+                        <th>Result</th>
+                        <th>Log</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <script id="entry-template" type="text/x-handlebars-template">
+                {{#each diceTypes}}
+                <tr>
+                    <td>
+                        <input type="text" class="number" placeholder="1" maxlength="3" style="width: 30px; text-align: right;" />
+                    </td>
+                    <td>
+                        d{{this}} <input type="hidden" value="{{this}}" class="size" />
+                    </td>
+                    <td>
+                        +<input type="text" placeholder="0" class="mod" style="width: 30px;" />
+                    </td>
+                    <td>
+                        <input type="text" class="baseMult" placeholder="1" style="width: 60px;" />
+                    </td>
+                    <td>
+                        <input type="text" class="conditionalMults" placeholder="" style="width: 140px;" />
+                    </td>
+                    <td>
+                        <button onclick="Calc(this);">go</button>
+                    </td>
+                    <td>
+                        <span class="result"></span>
+                    </td>
+                    <td>
+                        <span class="log"></span>
+                    </td>
+                </tr>
+                {{/each}}
+            </script>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <form onsubmit="handleHPCalc(); return false;">
+                Current HP<input type="text" style="width: 20px;" id="hpCalc_Current" value="" />&nbsp;&nbsp;
+                Max HO<input type="text" style="width: 20px;" id="hpCalc_Max" value="" />&nbsp;
+                ||&nbsp;
+                New Current HP<input type="text" style="width: 20px;" id="hpCalc_NewMax" value="" />&nbsp;
+                <button>Calculate new Max HP: </button>&nbsp;
+                <span id="hpCalc_Label"></span>
+            </form>
+        </div>
+    </div>
+    
+</body>
+</html>

@@ -4,7 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CharacterSheet - LegendsOfMyradon</title>
-    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="icon" href="data:;base64,iVBORwOKGO=" />
+
     <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js" crossorigin="anonymous" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.12/handlebars.min.js"></script>
 
@@ -34,180 +36,280 @@
                 }
             });
         }
+
+        function ConvertIdsToNameAttribs(form) {
+            $(form).find("input, select, textarea").each(function () {
+                var item = $(this);
+                if (!!item.attr("name") || !item.attr("id"))
+                    return;
+
+                item.attr("name", item.attr("id"));
+                item.attr("data-dynamic-name", true);
+                //console.log(item);
+            });
+        }
+
+        function RemoveNameAttribs(form) {
+            $(form).find("*[data-dynamic-name]").each(function () {
+                $(this).removeAttr("data-dynamic-name");
+            });
+        }
+
+        function SaveGame() {
+            var dataForm = $("#charsheetWrapper form");
+            ConvertIdsToNameAttribs(dataForm);
+            var dataItems = dataForm.serialize();
+            localStorage.setItem("myrLegendGame", dataItems);
+            var savedGame = localStorage.getItem("myrLegendGame");
+            console.log(savedGame);
+            RemoveNameAttribs(dataForm);
+        }
+
+        function LoadSavedGame() {
+            var savedGame = localStorage.getItem("myrLegendGame");
+            if (!!savedGame) {
+                var segments = savedGame.split("&");
+                for (var i = 0; i < segments.length; i++) {
+                    var segment = segments[i].split("=");
+                    var keyName = segment[0];
+                    var keyValue = segment[1];
+                    console.log(keyName + " " + keyValue);
+                    $("#" + keyName).val(decodeURI(keyValue));
+                }
+            }
+        }
+
+        $(document).ready(function () {
+            LoadSavedGame();
+        });
+
     </script>
+    <style>
+        #charsheetWrapper form {
+            position: relative;
+        }
+
+            #charsheetWrapper form .saveBtn {
+                /*position: absolute;
+                bottom: 0;
+                right: 0;*/
+                display: block;
+                margin: 20px 0 0 0;
+            }
+    </style>
 </head>
 <body>
 
     <div class="mainPageWrapper">
 
-        <div id="charsheetWrapper" class="">
+        <header>
+            <h1>Heroes of Myradon</h1>
+            <a href="Calc.htm">Calculator</a>
+            <a href="GameSheet.htm">Game Sheet</a>
+            <a href="Index.htm">Home</a>
+        </header>
 
-            <div style="float: right; margin: 0 100px 0 0;">
-                <h3>Cooldown Counter <button onclick="EndRound(); return false;">End Round</button></h3>
-                <table style="margin: 0 0 50px 0;" id="cooldownTbl">
-                    <thead>
+        <div id="charsheetWrapper">
+
+            <form onsubmit="SaveGame(); return false;"> 
+
+                <div style="float: right;">
+                    <h3>Cooldown Counter <button onclick="EndRound(); return false;">End Round</button></h3>
+                    <table style="margin: 0 0 50px 0;" id="cooldownTbl">
+                        <thead>
+                            <tr>
+                                <th>Effect</th>
+                                <th>Countdown</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" /></td>
+                                <td><input type="number" min="0" max="20" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" /></td>
+                                <td><input type="number" min="0" max="20" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" /></td>
+                                <td><input type="number" min="0" max="20" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!--<h3>Towers</h3>-->
+
+                    <table>
                         <tr>
-                            <th>Effect</th>
-                            <th>Countdown</th>
+                            <th></th>
+                            <th>Red Side</th>
+                            <th>Blue Side</th>
                         </tr>
-                    </thead>
+                        <tr>
+                            <td>Top Tower</td>
+                            <td><input type="text" id="p1_Ott" /></td>
+                            <td><input type="text" id="p2_Ott" /></td>
+                        </tr>
+                        <tr>
+                            <td>Middle Tower</td>
+                            <td><input type="text" id="p1_Otm" /></td>
+                            <td><input type="text" id="p2_Otm" /></td>
+                        </tr>
+                        <tr>
+                            <td>Bottom Tower</td>
+                            <td><input type="text" id="p1_Otb" /></td>
+                            <td><input type="text" id="p2_Otb" /></td>
+                        </tr>
+                        <tr>
+                            <td>Top Minion #1</td>
+                            <td><input type="text" id="p1_TopMin1" /></td>
+                            <td><input type="text" id="p2_TopMin1" /></td>
+                        </tr>
+                        <tr>
+                            <td>Top Minion #2</td>
+                            <td><input type="text" id="p1_TopMin2" /></td>
+                            <td><input type="text" id="p2_TopMin2" /></td>
+                        </tr>
+                        <tr>
+                            <td>Middle Minion #1</td>
+                            <td><input type="text" id="p1_MidMin1" /></td>
+                            <td><input type="text" id="p2_MidMin1" /></td>
+                        </tr>
+                        <tr>
+                            <td>Middle Minion #2</td>
+                            <td><input type="text" id="p1_MidMin2" /></td>
+                            <td><input type="text" id="p2_MidMin2" /></td>
+                        </tr>
+                        <tr>
+                            <td>Bottom Minion #1</td>
+                            <td><input type="text" id="p1_BotMin1" /></td>
+                            <td><input type="text" id="p2_BotMin1" /></td>
+                        </tr>
+                        <tr>
+                            <td>Bottom Minion #2</td>
+                            <td><input type="text" id="p1_BotMin2" /></td>
+                            <td><input type="text" id="p2_BotMin2" /></td>
+                        </tr>
+                    </table>
+
+
+                </div>
+
+                <table>
                     <tbody>
                         <tr>
-                            <td><input type="text" value="Thing 1" /></td>
-                            <td><input type="number" value="3" min="0" max="20" /></td>
+                            <th></th>
+                            <th>Red Hero #1</th>
+                            <th>Blue Hero #1</th>
+                            <th>Red Hero #2</th>
+                            <th>Blue Hero #2</th>
                         </tr>
                         <tr>
-                            <td><input type="text" value="Thing 1" /></td>
-                            <td><input type="number" value="2" min="0" max="20" /></td>
+                            <td>Initiative</td>
+                            <td><input type="text" value="1" readonly /></td>
+                            <td><input type="text" value="2" readonly /></td>
+                            <td><input type="text" value="3" readonly /></td>
+                            <td><input type="text" value="4" readonly /></td>
                         </tr>
                         <tr>
-                            <td><input type="text" /></td>
-                            <td><input type="number" min="0" max="20" /></td>
+                            <td>Character</td>
+                            <td><input type="text" id="i1_Name" /></td>
+                            <td><input type="text" id="i2_Name" /></td>
+                            <td><input type="text" id="i3_Name" /></td>
+                            <td><input type="text" id="i4_Name" /></td>
+                        </tr>
+
+                        <tr>
+                            <td>Char. Level</td>
+                            <td><input type="number" id="i1_CharLvl" min="1" max="11" /></td>
+                            <td><input type="number" id="i2_CharLvl" min="1" max="11" /></td>
+                            <td><input type="number" id="i3_CharLvl" min="1" max="11" /></td>
+                            <td><input type="number" id="i4_CharLvl" min="1" max="11" /></td>
+                        </tr>
+                        <tr>
+                            <td>Current Exp</td>
+                            <td><input type="number" id="i1_CurrExp" min="0" max="30" /></td>
+                            <td><input type="number" id="i2_CurrExp" min="0" max="30" /></td>
+                            <td><input type="number" id="i3_CurrExp" min="0" max="30" /></td>
+                            <td><input type="number" id="i4_CurrExp" min="0" max="30" /></td>
+                        </tr>
+                        <tr>
+                            <td>Exp for next level</td>
+                            <td><input type="number" id=i1_NextExp min="0" max="30" /></td>
+                            <td><input type="number" id=i2_NextExp min="0" max="30" /></td>
+                            <td><input type="number" id=i3_NextExp min="0" max="30" /></td>
+                            <td><input type="number" id=i4_NextExp min="0" max="30" /></td>
+                        </tr>
+                        <tr>
+                            <td>Base dmg</td>
+                            <td><input type="text" id="i1_BaseDmg" /></td>
+                            <td><input type="text" id="i2_BaseDmg" /></td>
+                            <td><input type="text" id="i3_BaseDmg" /></td>
+                            <td><input type="text" id="i4_BaseDmg" /></td>
+                        </tr>
+                        <tr>
+                            <td>Movement</td>
+                            <td><input type="number" id="i1_Movement" min="0" max="30" /></td>
+                            <td><input type="number" id="i2_Movement" min="0" max="30" /></td>
+                            <td><input type="number" id="i3_Movement" min="0" max="30" /></td>
+                            <td><input type="number" id="i4_Movement" min="0" max="30" /></td>
+                        </tr>
+                        <tr>
+                            <td>Currant health</td>
+                            <td><input type="number" id="i1_CurrHealth" /></td>
+                            <td><input type="number" id="i2_CurrHealth" /></td>
+                            <td><input type="number" id="i3_CurrHealth" /></td>
+                            <td><input type="number" id="i4_CurrHealth" /></td>
+                        </tr>
+                        <tr>
+                            <td>Max health</td>
+                            <td><input type="number" id="i1_MaxHealth" /></td>
+                            <td><input type="number" id="i2_MaxHealth" /></td>
+                            <td><input type="number" id="i3_MaxHealth" /></td>
+                            <td><input type="number" id="i4_MaxHealth" /></td>
+                        </tr>
+                        <tr>
+                            <td>Current mana</td>
+                            <td><input type="number" id="i1_CurrMana" /></td>
+                            <td><input type="number" id="i2_CurrMana" /></td>
+                            <td><input type="number" id="i3_CurrMana" /></td>
+                            <td><input type="number" id="i4_CurrMana" /></td>
+                        </tr>
+                        <tr>
+                            <td>Max mana</td>
+                            <td><input type="number" id="i1_MaxMana" /></td>
+                            <td><input type="number" id="i2_MaxMana" /></td>
+                            <td><input type="number" id="i3_MaxMana" /></td>
+                            <td><input type="number" id="i4_MaxMana" /></td>
+                        </tr>
+                        <tr>
+                            <td>Positive mods</td>
+                            <td><input type="text" id="i1_PozMods" /></td>
+                            <td><input type="text" id="i2_PozMods" /></td>
+                            <td><input type="text" id="i3_PozMods" /></td>
+                            <td><input type="text" id="i4_PozMods" /></td>
+                        </tr>
+                        <tr>
+                            <td>Negative mods</td>
+                            <td><input type="text" id="i1_NegMods" /></td>
+                            <td><input type="text" id="i2_NegMods" /></td>
+                            <td><input type="text" id="i3_NegMods" /></td>
+                            <td><input type="text" id="i4_NegMods" /></td>
+                        </tr>
+                        <tr>
+                            <td>Dodge Chance</td>
+                            <td><input type="text" id="i1_Dodge" /></td>
+                            <td><input type="text" id="i2_Dodge" /></td>
+                            <td><input type="text" id="i3_Dodge" /></td>
+                            <td><input type="text" id="i4_Dodge" /></td>
                         </tr>
                     </tbody>
                 </table>
 
-                <h3>Towers</h3>
+                <input type="submit" class="saveBtn" value="Save Game" />
 
-                <table>
-                    <tr>
-                        <th></th>
-                        <th>Player 1</th>
-                        <th>Player 2</th>
-                    </tr>
-                    <tr>
-                        <td>OTT</td>
-                        <td><input type="text" value="" /></td>
-                        <td><input type="text" value="" /></td>
-                    </tr>
-                    <tr>
-                        <td>OTM</td>
-                        <td><input type="text" value="" /></td>
-                        <td><input type="text" value="" /></td>
-                    </tr>
-                    <tr>
-                        <td>OTB</td>
-                        <td><input type="text" value="" /></td>
-                        <td><input type="text" value="" /></td>
-                    </tr>
-                </table>
-
-
-
-            </div>
-
-            <h3>Character Information</h3>
-
-            <table>
-                <tbody>
-                    <tr>
-                        <th></th>
-                        <th>Player 1</th>
-                        <th>Player 2</th>
-                        <th>Player 1</th>
-                        <th>Player 2</th>
-                    </tr>
-                    <tr>
-                        <td>Initiative</td>
-                        <td><input type="text" value="1" readonly /></td>
-                        <td><input type="text" value="2" readonly /></td>
-                        <td><input type="text" value="3" readonly /></td>
-                        <td><input type="text" value="4" readonly /></td>
-                    </tr>
-                    <tr>
-                        <td>Character</td>
-                        <td><input type="text" value="Tortle" /></td>
-                        <td><input type="text" value="Necromancy" /></td>
-                        <td><input type="text" value="Bandit King" /></td>
-                        <td><input type="text" value="Crusader" /></td>
-                    </tr>
-
-                    <tr>
-                        <td>Char. Level</td>
-                        <td><input type="number" value="1" min="1" max="11" /></td>
-                        <td><input type="number" value="1" min="1" max="11" /></td>
-                        <td><input type="number" value="1" min="1" max="11" /></td>
-                        <td><input type="number" value="1" min="1" max="11" /></td>
-                    </tr>
-                    <tr>
-                        <td>Current Exp</td>
-                        <td><input type="number" value="0" min="0" max="30" /></td>
-                        <td><input type="number" value="0" min="0" max="30" /></td>
-                        <td><input type="number" value="0" min="0" max="30" /></td>
-                        <td><input type="number" value="0" min="0" max="30" /></td>
-                    </tr>
-                    <tr>
-                        <td>Exp for next level</td>
-                        <td><input type="number" value="2" min="0" max="30" /></td>
-                        <td><input type="number" value="2" min="0" max="30" /></td>
-                        <td><input type="number" value="2" min="0" max="30" /></td>
-                        <td><input type="number" value="2" min="0" max="30" /></td>
-                    </tr>
-                    <tr>
-                        <td>Base dmg</td>
-                        <td><input type="text" value="1d8+3" /></td>
-                        <td><input type="text" value="1d10+1" /></td>
-                        <td><input type="text" value="1d10+1" /></td>
-                        <td><input type="text" value="1d8+3" /></td>
-                    </tr>
-                    <tr>
-                        <td>Movement</td>
-                        <td><input type="number" value="5" min="0" max="30" /></td>
-                        <td><input type="number" value="5" min="0" max="30" /></td>
-                        <td><input type="number" value="5" min="0" max="30" /></td>
-                        <td><input type="number" value="5" min="0" max="30" /></td>
-                    </tr>
-                    <tr>
-                        <td>Currant health</td>
-                        <td><input type="number" value="" /></td>
-                        <td><input type="number" value="" /></td>
-                        <td><input type="number" value="" /></td>
-                        <td><input type="number" value="" /></td>
-                    </tr>
-                    <tr>
-                        <td>Max health</td>
-                        <td><input type="number" value="" /></td>
-                        <td><input type="number" value="" /></td>
-                        <td><input type="number" value="" /></td>
-                        <td><input type="number" value="" /></td>
-                    </tr>
-                    <tr>
-                        <td>Current mana</td>
-                        <td><input type="number" value="" /></td>
-                        <td><input type="number" value="" /></td>
-                        <td><input type="number" value="" /></td>
-                        <td><input type="number" value="" /></td>
-                    </tr>
-                    <tr>
-                        <td>Max mana</td>
-                        <td><input type="number" value="" /></td>
-                        <td><input type="number" value="" /></td>
-                        <td><input type="number" value="" /></td>
-                        <td><input type="number" value="" /></td>
-                    </tr>
-                    <tr>
-                        <td>Positive mods</td>
-                        <td><input type="text" value="" /></td>
-                        <td><input type="text" value="" /></td>
-                        <td><input type="text" value="" /></td>
-                        <td><input type="text" value="" /></td>
-                    </tr>
-                    <tr>
-                        <td>Negative mods</td>
-                        <td><input type="text" value="" /></td>
-                        <td><input type="text" value="" /></td>
-                        <td><input type="text" value="" /></td>
-                        <td><input type="text" value="" /></td>
-                    </tr>
-                    <tr>
-                        <td>Dodge Chance</td>
-                        <td><input type="text" value="" /></td>
-                        <td><input type="text" value="" /></td>
-                        <td><input type="text" value="" /></td>
-                        <td><input type="text" value="" /></td>
-                    </tr>
-                </tbody>
-            </table>
+            </form>
 
         </div>
 
