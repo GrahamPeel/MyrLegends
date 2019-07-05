@@ -35,11 +35,13 @@
 
             // Setup the hero drop down selector (once before per-hero cloning)
             var allHeroes = GetHeroChoices();
-            var heroDDL = $("#heroName_heroTick");
+            var heroDDL = $("#row_heroName select");
             for (var i = 0; i < allHeroes.length; i++) {
                 var hero = allHeroes[i];
                 heroDDL.append("<option>" + hero.name + "</option>");
             }
+
+            // If this is a new game, select some defaults
 
             // Construct elements based on number of heroes
             var numberOfHeroes = currentGame.heroCount;
@@ -64,18 +66,26 @@
                 targetTd.remove();
             });
 
-            // Pushed saved game data to elements
-            var segments = currentGame.savedItems.split("&");
-            for (var i = 0; i < segments.length; i++) {
-                var segment = segments[i].split("=");
-                var keyName = segment[0];
-                var keyValue = segment[1];
-                if (!keyName) {
-                    console.log("Bad key name from segment: " + segments[i]);
-                    continue;
+            // Pushed saved game data to elements, or push the starting-game defaults.
+            if (!!currentGame.savedItems) {
+                var segments = currentGame.savedItems.split("&");
+                for (var i = 0; i < segments.length; i++) {
+                    var segment = segments[i].split("=");
+                    var keyName = segment[0];
+                    var keyValue = segment[1];
+                    if (!keyName) {
+                        console.log("Bad key name from segment: " + segments[i]);
+                        continue;
+                    }
+                    $("#" + keyName).val(keyValue);
                 }
-                $("#" + keyName).val(keyValue);
             }
+            else {
+                $("#row_heroLvl input").val("1");
+                $("#row_heroExp input").val("0");
+                $("#row_heroNextExp input").val("2");
+            }
+            
         }
 
         function EndRound() {
@@ -150,7 +160,6 @@
         <header>
             <h1>Heroes of Myradon</h1>
             <a href="Calc.htm">Calculator</a>
-            <a href="GameSheet.htm">Game Sheet</a>
             <a href="Index.htm">Home</a>
         </header>
 
@@ -258,58 +267,57 @@
                         <tr><th></th></tr>
                     </thead>
                     <tbody>
-                        <tr>
+                        <tr id="row_heroName">
                             <td>Character</td>
                             <td>
                                 <select id="heroName_heroTick"><option>---</option></select>
                             </td>
                         </tr>
-
-                        <tr>
+                        <tr id="row_heroLvl">
                             <td>Char. Level</td>
                             <td><input type="number" id="heroLvl_heroTick" min="1" max="11" /></td>
                         </tr>
-                        <tr>
+                        <tr id="row_heroExp">
                             <td>Current Exp</td>
                             <td><input type="number" id="heroExp_heroTick" min="0" max="30" /></td>
                         </tr>
-                        <tr>
+                        <tr id="row_heroNextExp">
                             <td>Exp for next level</td>
                             <td><input type="number" id="heroNextExp_heroTick" min="0" max="30" /></td>
                         </tr>
-                        <tr>
+                        <tr id="row_heroBaseDmg">
                             <td>Base dmg</td>
                             <td><input type="text" id="heroBaseDmg_heroTick" /></td>
                         </tr>
-                        <tr>
+                        <tr id="row_heroMvmt">
                             <td>Movement</td>
                             <td><input type="number" id="heroMvmt_heroTick" min="0" max="30" /></td>
                         </tr>
-                        <tr>
+                        <tr id="row_heroCurrHealth">
                             <td>Currant health</td>
                             <td><input type="number" id="heroCurrHealth_heroTick" /></td>
                         </tr>
-                        <tr>
+                        <tr id="row_heroMaxHealth">
                             <td>Max health</td>
                             <td><input type="number" id="heroMaxHealth_heroTick" /></td>
                         </tr>
-                        <tr>
+                        <tr id="row_heroCurrMana">
                             <td>Current mana</td>
                             <td><input type="number" id="heroCurrMana_heroTick" /></td>
                         </tr>
-                        <tr>
+                        <tr id="row_heroMaxMana">
                             <td>Max mana</td>
                             <td><input type="number" id="heroMaxMana_heroTick" /></td>
                         </tr>
-                        <tr>
+                        <tr id="row_heroPozMods">
                             <td>Positive mods</td>
                             <td><input type="text" id="heroPozMods_heroTick" /></td>
                         </tr>
-                        <tr>
+                        <tr id="row_heroNegMods">
                             <td>Negative mods</td>
                             <td><input type="text" id="heroNegMods_heroTick" /></td>
                         </tr>
-                        <tr>
+                        <tr id="row_heroDodge">
                             <td>Dodge Chance</td>
                             <td><input type="text" id="heroDodge_heroTick" /></td>
                         </tr>
