@@ -10,8 +10,74 @@
     <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js" crossorigin="anonymous" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.12/handlebars.min.js"></script>
     <script type="text/javascript" src="Library.js"></script>
+    <script type="text/javascript" src="GameOptions.js"></script>
 
     <script type="text/javascript">
+
+        var accountObj = FetchAccountObj();
+        var currentGame = null;
+
+        // todo, clean up to fetch method, redirect if null, the method to set vals, another to load grid....
+        $(document).ready(function () {
+            var id = getUrlParameter("id");
+            currentGame = FindGameInAcctObjById(accountObj, id).gameObj;
+            if (currentGame == null) {
+                window.location = "Index.htm?badGame=" + id;
+                return;
+            }
+
+            SetUpHeroGrid();
+        });
+
+        function SetUpHeroGrid() {
+            // Game name, other details
+            $("#gameNameHeading h2 span").html(currentGame.name);
+
+            // Setup the hero drop down selector (once before per-hero cloning)
+            var allHeroes = GetHeroChoices();
+            var heroDDL = $("#heroName_heroTick");
+            for (var i = 0; i < allHeroes.length; i++) {
+                var hero = allHeroes[i];
+                heroDDL.append("<option>" + hero.name + "</option>");
+            }
+
+            // Construct elements based on number of heroes
+            var numberOfHeroes = currentGame.heroCount;
+            var headTr = $("#heroDetails thead tr").eq(0);
+            for (var i = 1; i <= numberOfHeroes; i++) {
+                var isRed = i % 2 != 0;
+                headTr.append("<th>" + (isRed ? "Red" : "Blue") + "Hero #" + i + "</th>");
+            }
+            $("#heroDetails tbody tr").each(function () {
+                var tr = $(this);
+                var targetTd = tr.find("td").eq(1);
+                for (var i = 1; i <= numberOfHeroes; i++) {
+                    var clonedTd = targetTd.clone();
+                    clonedTd.find("input, select, textarea").each(function () {
+                        if (!!$(this).attr("id")) {
+                            var id = $(this).attr("id");
+                            $(this).attr("id", id.replace("heroTick", i));
+                        }
+                    });
+                    tr.append(clonedTd);
+                }
+                targetTd.remove();
+            });
+
+            // Pushed saved game data to elements
+            var segments = currentGame.savedItems.split("&");
+            for (var i = 0; i < segments.length; i++) {
+                var segment = segments[i].split("=");
+                var keyName = segment[0];
+                var keyValue = segment[1];
+                if (!keyName) {
+                    console.log("Bad key name from segment: " + segments[i]);
+                    continue;
+                }
+                $("#" + keyName).val(keyValue);
+            }
+        }
+
         function EndRound() {
             var tbl = $("#cooldownTbl");
             tbl.find("tbody tr").each(function () {
@@ -38,102 +104,43 @@
             });
         }
 
-        function ConvertIdsToNameAttribs(form) {
-            $(form).find("input, select, textarea").each(function () {
-                var item = $(this);
-                if (!!item.attr("name") || !item.attr("id"))
-                    return;
-
-                item.attr("name", item.attr("id"));
-                item.attr("data-dynamic-name", true);
-                //console.log(item);
-            });
-        }
-
-        function RemoveNameAttribs(form) {
-            $(form).find("*[data-dynamic-name]").each(function () {
-                $(this).removeAttr("data-dynamic-name");
-            });
-        }
-
         function SaveGame() {
+
+            function ConvertIdsToNameAttribs(form) {
+                $(form).find("input, select, textarea").each(function () {
+                    var item = $(this);
+                    if (!!item.attr("name") || !item.attr("id"))
+                        return;
+
+                    item.attr("name", item.attr("id"));
+                    item.attr("data-dynamic-name", true);
+                });
+            }
+
+            function RemoveNameAttribs(form) {
+                $(form).find("*[data-dynamic-name]").each(function () {
+                    $(this).removeAttr("data-dynamic-name");
+                });
+            }
+
             var dataForm = $("#charsheetWrapper form");
             ConvertIdsToNameAttribs(dataForm);
             // keep original text of inputs
-            var savedItems = decodeURIComponent(dataForm.serialize().replace(/%2F/g, " ")); 
-            var savedGame = GetGameObj();
-            savedGame.savedItems = savedItems;
-            SaveGameObj(savedGame);
+            var savedItems = decodeURIComponent(dataForm.serialize().replace(/%2F/g, " "));
+            currentGame.savedItems = savedItems;
+            UpdateAccountObj(accountObj);
+
             RemoveNameAttribs(dataForm);
         }
 
-        function LoadSavedGame() {
-            var savedGame = GetGameObj();
-            if (savedGame != null) {
-                return savedGame;
-            }
-            else {
-                window.location = "Index.htm";
-            }
-        }
-
-        function SetUpHeroGrid(game) {
-            console.log(game);
-            var numberOfHeroes = game.heroCount;
-
-            var headTr = $("#heroDetails thead tr").eq(0);
-            for (var i = 1; i <= numberOfHeroes; i++) {
-                var isRed = i % 2 != 0;
-                headTr.append("<th>" + (isRed ? "Red" : "Blue") + "Hero #" + i + "</th>");
-            }
-            $("#heroDetails tbody tr").each(function () {
-                var tr = $(this);
-                var targetTd = tr.find("td").eq(1);
-                for (var i = 1; i <= numberOfHeroes; i++) {
-                    var clonedTd = targetTd.clone();
-                    clonedTd.find("input, select, textarea").each(function () {
-                        if (!!$(this).attr("id")) {
-                            var id = $(this).attr("id");
-                            $(this).attr("id", id.replace("{heroTick}", i));
-                        }
-                    });
-                    tr.append(clonedTd);
-                }
-                targetTd.remove();
-            });
-
-            var segments = game.savedItems.split("&");
-            for (var i = 0; i < segments.length; i++) {
-                var segment = segments[i].split("=");
-                var keyName = segment[0];
-                var keyValue = segment[1];
-                if (!keyName) {
-                    console.log("Bad key name from segment: " + segments[i]);
-                    continue;
-                }
-                $("#" + keyName).val(keyValue);
-            }
-        }
-
-        // todo, clean up to fetch method, redirect if null, the method to set vals, another to load grid....
-        $(document).ready(function () {
-            var game = LoadSavedGame();
-            SetUpHeroGrid(game);
-        });
-
     </script>
-    <style>
-        #charsheetWrapper form {
-            position: relative;
-        }
 
-            #charsheetWrapper form .saveBtn {
-                /*position: absolute;
-                bottom: 0;
-                right: 0;*/
-                display: block;
-                margin: 20px 0 0 0;
-            }
+    <style>
+        #gameNameHeading {
+            background-color: #efefef;
+            padding: 5px 4px;
+            margin: 0 0 8px 0;
+        }
     </style>
 </head>
 <body>
@@ -149,16 +156,22 @@
 
         <div id="charsheetWrapper">
 
-            <form onsubmit="SaveGame(); return false;"> 
+            <form onsubmit="SaveGame(); return false;">
+
+                <div id="gameNameHeading">
+                    <h2>
+                        Current Game: 
+                        <span></span> 
+                        &nbsp;&nbsp;<input type="submit" class="saveBtn" value="Save Game" />
+                    </h2>
+                </div>
 
                 <div style="float: right;">
-                    <h3>Cooldown Counter <button onclick="EndRound(); return false;">End Round</button></h3>
-                    <table style="margin: 0 0 50px 0;" id="cooldownTbl">
+                    <table style="margin: 0 0 20px 0;" id="cooldownTbl">
                         <thead>
                             <tr>
-                                <th>Effect</th>
                                 <th>Countdown</th>
-                            </tr>
+                                <th>Rounds</th>
                         </thead>
                         <tbody>
                             <tr>
@@ -173,6 +186,12 @@
                                 <td><input type="text" /></td>
                                 <td><input type="number" min="0" max="20" /></td>
                             </tr>
+                            <tr>
+                                <td></td>
+                                <td>
+                                    <button onclick="EndRound(); return false;">End Round</button>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
 
@@ -186,48 +205,48 @@
                         </tr>
                         <tr>
                             <td>Top Tower</td>
-                            <td><input type="text" id="p1_Ott" /></td>
-                            <td><input type="text" id="p2_Ott" /></td>
+                            <td><input class="smallNumber" type="text" id="p1_Ott" /></td>
+                            <td><input class="smallNumber" type="text" id="p2_Ott" /></td>
                         </tr>
                         <tr>
                             <td>Middle Tower</td>
-                            <td><input type="text" id="p1_Otm" /></td>
-                            <td><input type="text" id="p2_Otm" /></td>
+                            <td><input class="smallNumber" type="text" id="p1_Otm" /></td>
+                            <td><input class="smallNumber" type="text" id="p2_Otm" /></td>
                         </tr>
                         <tr>
                             <td>Bottom Tower</td>
-                            <td><input type="text" id="p1_Otb" /></td>
-                            <td><input type="text" id="p2_Otb" /></td>
+                            <td><input class="smallNumber" type="text" id="p1_Otb" /></td>
+                            <td><input class="smallNumber" type="text" id="p2_Otb" /></td>
                         </tr>
                         <tr>
                             <td>Top Minion #1</td>
-                            <td><input type="text" id="p1_TopMin1" /></td>
-                            <td><input type="text" id="p2_TopMin1" /></td>
+                            <td><input class="smallNumber" type="text" id="p1_TopMin1" /></td>
+                            <td><input class="smallNumber" type="text" id="p2_TopMin1" /></td>
                         </tr>
                         <tr>
                             <td>Top Minion #2</td>
-                            <td><input type="text" id="p1_TopMin2" /></td>
-                            <td><input type="text" id="p2_TopMin2" /></td>
+                            <td><input class="smallNumber" type="text" id="p1_TopMin2" /></td>
+                            <td><input class="smallNumber" type="text" id="p2_TopMin2" /></td>
                         </tr>
                         <tr>
                             <td>Middle Minion #1</td>
-                            <td><input type="text" id="p1_MidMin1" /></td>
-                            <td><input type="text" id="p2_MidMin1" /></td>
+                            <td><input class="smallNumber" type="text" id="p1_MidMin1" /></td>
+                            <td><input class="smallNumber" type="text" id="p2_MidMin1" /></td>
                         </tr>
                         <tr>
                             <td>Middle Minion #2</td>
-                            <td><input type="text" id="p1_MidMin2" /></td>
-                            <td><input type="text" id="p2_MidMin2" /></td>
+                            <td><input class="smallNumber" type="text" id="p1_MidMin2" /></td>
+                            <td><input class="smallNumber" type="text" id="p2_MidMin2" /></td>
                         </tr>
                         <tr>
                             <td>Bottom Minion #1</td>
-                            <td><input type="text" id="p1_BotMin1" /></td>
-                            <td><input type="text" id="p2_BotMin1" /></td>
+                            <td><input class="smallNumber" type="text" id="p1_BotMin1" /></td>
+                            <td><input class="smallNumber" type="text" id="p2_BotMin1" /></td>
                         </tr>
                         <tr>
                             <td>Bottom Minion #2</td>
-                            <td><input type="text" id="p1_BotMin2" /></td>
-                            <td><input type="text" id="p2_BotMin2" /></td>
+                            <td><input class="smallNumber" type="text" id="p1_BotMin2" /></td>
+                            <td><input class="smallNumber" type="text" id="p2_BotMin2" /></td>
                         </tr>
                     </table>
 
@@ -241,100 +260,61 @@
                     <tbody>
                         <tr>
                             <td>Character</td>
-                            <td><input type="text" id="hero_{heroTick}" /></td>
-                            <!--<td><input type="text" id="i2_Name" /></td>
-                            <td><input type="text" id="i3_Name" /></td>
-                            <td><input type="text" id="i4_Name" /></td>-->
+                            <td>
+                                <select id="heroName_heroTick"><option>---</option></select>
+                            </td>
                         </tr>
 
                         <tr>
                             <td>Char. Level</td>
-                            <td><input type="number" id="heroLvl_{heroTick}" min="1" max="11" /></td>
-                            <!--<td><input type="number" id="i2_CharLvl" min="1" max="11" /></td>
-                            <td><input type="number" id="i3_CharLvl" min="1" max="11" /></td>
-                            <td><input type="number" id="i4_CharLvl" min="1" max="11" /></td>-->
+                            <td><input type="number" id="heroLvl_heroTick" min="1" max="11" /></td>
                         </tr>
                         <tr>
                             <td>Current Exp</td>
-                            <td><input type="number" id="heroExp_{heroTick}" min="0" max="30" /></td>
-                            <!--<td><input type="number" id="i2_CurrExp" min="0" max="30" /></td>
-                            <td><input type="number" id="i3_CurrExp" min="0" max="30" /></td>
-                            <td><input type="number" id="i4_CurrExp" min="0" max="30" /></td>-->
+                            <td><input type="number" id="heroExp_heroTick" min="0" max="30" /></td>
                         </tr>
                         <tr>
                             <td>Exp for next level</td>
-                            <td><input type="number" id="heroNextExp_{heroTick}" min="0" max="30" /></td>
-                            <!--<td><input type="number" id=i2_NextExp min="0" max="30" /></td>
-                            <td><input type="number" id=i3_NextExp min="0" max="30" /></td>
-                            <td><input type="number" id=i4_NextExp min="0" max="30" /></td>-->
+                            <td><input type="number" id="heroNextExp_heroTick" min="0" max="30" /></td>
                         </tr>
                         <tr>
                             <td>Base dmg</td>
-                            <td><input type="text" id="heroBaseDmg_{heroTick}" /></td>
-                            <!--<td><input type="text" id="i2_BaseDmg" /></td>
-                            <td><input type="text" id="i3_BaseDmg" /></td>
-                            <td><input type="text" id="i4_BaseDmg" /></td>-->
+                            <td><input type="text" id="heroBaseDmg_heroTick" /></td>
                         </tr>
                         <tr>
                             <td>Movement</td>
-                            <td><input type="number" id="heroMvmt_{heroTick}" min="0" max="30" /></td>
-                            <!--<td><input type="number" id="i2_Movement" min="0" max="30" /></td>
-                            <td><input type="number" id="i3_Movement" min="0" max="30" /></td>
-                            <td><input type="number" id="i4_Movement" min="0" max="30" /></td>-->
+                            <td><input type="number" id="heroMvmt_heroTick" min="0" max="30" /></td>
                         </tr>
                         <tr>
                             <td>Currant health</td>
-                            <td><input type="number" id="heroCurrHealth_{heroTick}" /></td>
-                            <!--<td><input type="number" id="i2_CurrHealth" /></td>
-                            <td><input type="number" id="i3_CurrHealth" /></td>
-                            <td><input type="number" id="i4_CurrHealth" /></td>-->
+                            <td><input type="number" id="heroCurrHealth_heroTick" /></td>
                         </tr>
                         <tr>
                             <td>Max health</td>
-                            <td><input type="number" id="heroMaxHealth_{heroTick}" /></td>
-                            <!--<td><input type="number" id="i2_MaxHealth" /></td>
-                            <td><input type="number" id="i3_MaxHealth" /></td>
-                            <td><input type="number" id="i4_MaxHealth" /></td>-->
+                            <td><input type="number" id="heroMaxHealth_heroTick" /></td>
                         </tr>
                         <tr>
                             <td>Current mana</td>
-                            <td><input type="number" id="heroCurrMana_{heroTick}" /></td>
-                            <!--<td><input type="number" id="i2_CurrMana" /></td>
-                            <td><input type="number" id="i3_CurrMana" /></td>
-                            <td><input type="number" id="i4_CurrMana" /></td>-->
+                            <td><input type="number" id="heroCurrMana_heroTick" /></td>
                         </tr>
                         <tr>
                             <td>Max mana</td>
-                            <td><input type="number" id="heroMaxMana_{heroTick}" /></td>
-                            <!--<td><input type="number" id="i2_MaxMana" /></td>
-                            <td><input type="number" id="i3_MaxMana" /></td>
-                            <td><input type="number" id="i4_MaxMana" /></td>-->
+                            <td><input type="number" id="heroMaxMana_heroTick" /></td>
                         </tr>
                         <tr>
                             <td>Positive mods</td>
-                            <td><input type="text" id="heroPozMods_{heroTick}" /></td>
-                            <!--<td><input type="text" id="i2_PozMods" /></td>
-                            <td><input type="text" id="i3_PozMods" /></td>
-                            <td><input type="text" id="i4_PozMods" /></td>-->
+                            <td><input type="text" id="heroPozMods_heroTick" /></td>
                         </tr>
                         <tr>
                             <td>Negative mods</td>
-                            <td><input type="text" id="heroNegMods_{heroTick}" /></td>
-                            <!--<td><input type="text" id="i2_NegMods" /></td>
-                            <td><input type="text" id="i3_NegMods" /></td>
-                            <td><input type="text" id="i4_NegMods" /></td>-->
+                            <td><input type="text" id="heroNegMods_heroTick" /></td>
                         </tr>
                         <tr>
                             <td>Dodge Chance</td>
-                            <td><input type="text" id="heroDodge_{heroTick}" /></td>
-                            <!--<td><input type="text" id="i2_Dodge" /></td>
-                            <td><input type="text" id="i3_Dodge" /></td>
-                            <td><input type="text" id="i4_Dodge" /></td>-->
+                            <td><input type="text" id="heroDodge_heroTick" /></td>
                         </tr>
                     </tbody>
                 </table>
-
-                <input type="submit" class="saveBtn" value="Save Game" />
 
             </form>
 

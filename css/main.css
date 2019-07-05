@@ -10,6 +10,8 @@ table {
 
 td, th {
     padding: 4px;
+    background-color: #f6f6f6;
+    border: solid 1px #ececec;
 }
 
 ul {
@@ -24,7 +26,7 @@ h1 {
     font-size: 26px;
 }
 
-h1, h3, hr, header {
+h1, h3, hr {
     margin: 0 0 22px 0;
 }
 
@@ -32,6 +34,7 @@ header {
     overflow: hidden;
     background: rgba(220, 220, 220, 1);
     padding: 5px 0;
+    margin: 0 0 12px 0;
 }
 
     header h1 {
@@ -50,9 +53,22 @@ header {
     padding: 0 10px;
 }
 
-input {
+input[type=text] {
     font-size: 16px;
     width: 100px;
     padding: 4px;
 }
 
+    input[type=text].smallNumber {
+        width: 50px;
+    }
+
+input[type=number] {
+    font-size: 16px;
+    width: 50px;
+    padding: 4px;
+}
+
+input[type=checkbox] {
+    font-size: 16px;
+}
