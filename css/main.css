@@ -72,3 +72,56 @@ input[type=number] {
 input[type=checkbox] {
     font-size: 16px;
 }
+
+
+
+#gameBoardBody #controlsHolder {
+    float: right;
+    background-color: #eaeaea;
+    padding: 5px;
+    border: solid 1px #ccc;
+    min-width: 24%;
+}
+
+#gameBoardBody .bordHolder {
+    display: table;
+    border: solid 1px #ccc;
+}
+
+    #gameBoardBody .bordHolder.cellsClickable .bordCell {
+        cursor: pointer;
+    }
+
+#gameBoardBody .bordRow {
+    overflow: hidden;
+}
+
+#gameBoardBody .bordCell {
+    float: left;
+    position: relative;
+    border: solid 1px #ccc;
+    min-height: 50px;
+    min-width: 50px;
+    padding: 10px;
+}
+
+    #gameBoardBody .bordCell .cellId {
+        position: absolute;
+        font-size: 9px;
+        top: 0;
+        right: 0;
+        color: #ccc;
+    }
+
+    #gameBoardBody .bordCell .iconTopper {
+        min-height: 50px;
+        min-width: 50px;
+        border: dotted 1px #eaeaea;
+        text-align: center;
+        line-height: 50px;
+    }
+
+#gameBoardBody .clickable {
+    color: blue;
+    cursor: pointer;
+}
