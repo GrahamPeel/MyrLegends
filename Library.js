@@ -30,6 +30,25 @@ function SaveNewGame(accountObj, heroCount, name) {
     return newGame;
 }
 
+function ConfirmDeleteGame(a, id, msg) {
+    var c = confirm(msg || "You sure?");
+    if (c)
+        DeleteGame(a, id);
+    return c;
+
+    function DeleteGame(a, id) {
+        var findResult = FindGameInAcctObjById(accountObj, id);
+        if (findResult != null) {
+            console.log(findResult.position);
+            accountObj.savedGames.splice(findResult.position, 1);
+            console.log(accountObj);
+            UpdateAccountObj(accountObj);
+            $(a).closest("li").hide();
+        }
+    }
+}
+
+
 // Returns a ref to game obj, plus the position int of the item in the array
 function FindGameInAcctObjById(accountObj, id) {
     if (accountObj.savedGames != null) {

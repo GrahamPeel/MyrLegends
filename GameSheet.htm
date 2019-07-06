@@ -17,7 +17,6 @@
         var accountObj = FetchAccountObj();
         var currentGame = null;
 
-        // todo, clean up to fetch method, redirect if null, the method to set vals, another to load grid....
         $(document).ready(function () {
             var id = getUrlParameter("id");
             currentGame = FindGameInAcctObjById(accountObj, id).gameObj;
@@ -26,132 +25,15 @@
                 return;
             }
 
+            SetupGameHeading(currentGame);
             SetUpHeroGrid();
+            SetupGameBoard();
+
+            // fire change once for setup
+            HandleWorkspaceChange();
         });
 
-        function SetUpHeroGrid() {
-            // Game name, other details
-            $("#gameNameHeading h2 span").html(currentGame.name);
-
-            // Setup the hero drop down selector (once before per-hero cloning)
-            var allHeroes = GetHeroChoices();
-            var heroDDL = $("#row_heroName select");
-            for (var i = 0; i < allHeroes.length; i++) {
-                var hero = allHeroes[i];
-                heroDDL.append("<option>" + hero.name + "</option>");
-            }
-
-            // If this is a new game, select some defaults
-
-            // Construct elements based on number of heroes
-            var numberOfHeroes = currentGame.heroCount;
-            var headTr = $("#heroDetails thead tr").eq(0);
-            for (var i = 1; i <= numberOfHeroes; i++) {
-                var isRed = i % 2 != 0;
-                headTr.append("<th>" + (isRed ? "Red" : "Blue") + "Hero #" + i + "</th>");
-            }
-            $("#heroDetails tbody tr").each(function () {
-                var tr = $(this);
-                var targetTd = tr.find("td").eq(1);
-                for (var i = 1; i <= numberOfHeroes; i++) {
-                    var clonedTd = targetTd.clone();
-                    clonedTd.find("input, select, textarea").each(function () {
-                        if (!!$(this).attr("id")) {
-                            var id = $(this).attr("id");
-                            $(this).attr("id", id.replace("heroTick", i));
-                        }
-                    });
-                    tr.append(clonedTd);
-                }
-                targetTd.remove();
-            });
-
-            // Pushed saved game data to elements, or push the starting-game defaults.
-            if (!!currentGame.savedItems) {
-                var segments = currentGame.savedItems.split("&");
-                for (var i = 0; i < segments.length; i++) {
-                    var segment = segments[i].split("=");
-                    var keyName = segment[0];
-                    var keyValue = segment[1];
-                    if (!keyName) {
-                        console.log("Bad key name from segment: " + segments[i]);
-                        continue;
-                    }
-                    $("#" + keyName).val(keyValue);
-                }
-            }
-            else {
-                $("#row_heroLvl input").val("1");
-                $("#row_heroExp input").val("0");
-                $("#row_heroNextExp input").val("2");
-            }
-            
-        }
-
-        function EndRound() {
-            var tbl = $("#cooldownTbl");
-            tbl.find("tbody tr").each(function () {
-                var textInput = $(this).find("td").eq(0).find("input");
-                var text = textInput.val();
-                var countDownInput = $(this).find("td").eq(1).find("input");
-                var countDownVal = countDownInput.val();
-                if (!!text) {
-                    var count = parseInt(countDownVal);
-                    console.log(count + " " + countDownVal);
-                    if (isNaN(count)) {
-                        alert("Bad countdown: " + countDownVal);
-                        return;
-                    }
-                    if (count == 0) {
-                        countDownInput.val("");
-                        textInput.val("");
-                    }
-                    else {
-                        count -= 1;
-                        countDownInput.val(count);
-                    }
-                }
-            });
-        }
-
-        function SaveGame() {
-
-            function ConvertIdsToNameAttribs(form) {
-                $(form).find("input, select, textarea").each(function () {
-                    var item = $(this);
-                    if (!!item.attr("name") || !item.attr("id"))
-                        return;
-
-                    item.attr("name", item.attr("id"));
-                    item.attr("data-dynamic-name", true);
-                });
-            }
-
-            function RemoveNameAttribs(form) {
-                $(form).find("*[data-dynamic-name]").each(function () {
-                    $(this).removeAttr("data-dynamic-name");
-                });
-            }
-
-            var dataForm = $("#charsheetWrapper form");
-            ConvertIdsToNameAttribs(dataForm);
-            // keep original text of inputs
-            var savedItems = decodeURIComponent(dataForm.serialize().replace(/%2F/g, " "));
-            currentGame.savedItems = savedItems;
-            UpdateAccountObj(accountObj);
-
-            RemoveNameAttribs(dataForm);
-        }
-
     </script>
-
-    <style>
-        #gameNameHeading {
-            background-color: #efefef;
-            padding: 5px 4px;
-            margin: 0 0 8px 0;
-        }
-    </style>
 </head>
 <body>
 
@@ -165,15 +47,21 @@
 
         <div id="charsheetWrapper">
 
-            <form onsubmit="SaveGame(); return false;">
+            <div id="gameNameHeading">
+                <h2>
+                    Game:
+                    <span style="font-size: 28px; display: inline-block; margin: 0 10px;"></span>
+                    &nbsp;&nbsp;<input type="submit" class="saveBtn" value="Save Game"
+                                       onclick="$('form').submit(); return false;"/>
 
-                <div id="gameNameHeading">
-                    <h2>
-                        Current Game: 
-                        <span></span> 
-                        &nbsp;&nbsp;<input type="submit" class="saveBtn" value="Save Game" />
-                    </h2>
-                </div>
+                    <select id="wspaceSelect" onchange="HandleWorkspaceChange();">
+                        <option value="gameSheetForm" selected="selected">Game Sheet</option>
+                        <option value="gameBoardForm">Game board</option>
+                    </select>
+                </h2>
+            </div>
+
+            <form id="gameSheetForm"  style="display: none;" onsubmit="SaveGameSheet(); return false;">
 
                 <div style="float: right;">
                     <table style="margin: 0 0 20px 0;" id="cooldownTbl">
@@ -325,6 +213,96 @@
                 </table>
 
             </form>
+
+
+            <form id="gameBoardForm" style="display: none;" onsubmit="SaveGameBoard(); return false;">
+
+                <div id="controlsHolder">
+
+                    <div style="margin-bottom: 20px;">
+                        <h4>Select an Operation</h4>
+                        <select id="operationSelector" onchange="ChangeCurrentOperation();">
+                            <option value="markTerrain" selected="selected">Mark Terrains</option>
+                            <option value="markIcons" >Mark Unit Locations</option>
+                        </select>
+                    </div>
+
+                    <div id="controlSections">
+                        <div class="controllSection" id="markTerrain" style="display: none;">
+                            <span class="heading">Select a color to mark terrain squares</span>
+                            <div>
+                                <div><label><input type="radio" name="markTerrain" value="green" /> Green</label></div>
+                                <div><label><input type="radio" name="markTerrain" value="grey" /> Gray</label></div>
+                                <div><label><input type="radio" name="markTerrain" value="yellow" /> Yellow</label></div>
+                                <div><label><input type="radio" name="markTerrain" value="brown" /> Brown</label></div>
+                                <div><label><input type="radio" name="markTerrain" value="black" /> Black</label></div>
+                                <div><label><input type="radio" name="markTerrain" value="transparent" /> Clear</label></div>
+                            </div>
+                        </div>
+
+                        <div class="controllSection" id="markIcons" style="display: none;">
+
+                            <span class="heading">Select a Hero/Minion/Tower to move</span>
+
+                            <script id="heroIconMarkers-template" type="text/x-handlebars-template">
+                                {{#each items}}
+                                <div class="heroIcon">
+                                    <label>
+                                        <input type="radio" name="markIcons" value="{{valStr}}" />
+                                        <span class="{{color}}Dot"></span> {{name}}
+                                    </label>
+                                </div>
+                                {{/each}}
+                            </script>
+
+                            <div class="iconList">
+                                <div id="redHerosTarget"></div>
+                                <!--<div class="heroIcon"><label><input type="radio" name="markIcons" value="h_GL_red" /><span class="redDot"></span> Golem</label></div>
+                        <div class="heroIcon"><label><input type="radio" name="markIcons" value="h_HM_red" /><span class="redDot"></span> Hitman</label></div>-->
+
+                                <div><label><input type="radio" name="markIcons" value="t_TT_red" /><span class="redDot"></span> Top Tower</label></div>
+                                <div><label><input type="radio" name="markIcons" value="t_MT_red" /><span class="redDot"></span> Mid Tower</label></div>
+                                <div><label><input type="radio" name="markIcons" value="t_BT_red" /><span class="redDot"></span> Bottom Tower</label></div>
+
+                                <div><label><input type="radio" name="markIcons" value="m_TM1_red" /><span class="redDot"></span> Top Minion #1</label></div>
+                                <div><label><input type="radio" name="markIcons" value="m_TM2_red" /><span class="redDot"></span> Top Minion #2</label></div>
+
+                                <div><label><input type="radio" name="markIcons" value="m_MM1_red" /><span class="redDot"></span> Middle Minion #1</label></div>
+                                <div><label><input type="radio" name="markIcons" value="m_MM2_red" /><span class="redDot"></span> Middle Minion #2</label></div>
+
+                                <div><label><input type="radio" name="markIcons" value="m_BM1_red" /><span class="redDot"></span> Bottom Minion #1</label></div>
+                                <div><label><input type="radio" name="markIcons" value="m_BM2_red" /><span class="redDot"></span> Bottom Minion #2</label></div>
+
+                            </div>
+
+                            <div class="iconList">
+
+                                <div id="blueHerosTarget"></div>
+                                <!--<div class="heroIcon"><label><input type="radio" name="markIcons" value="h_WG_blue" /><span class="blueDot"></span> Warforged Giant</label></div>
+                        <div class="heroIcon"><label><input type="radio" name="markIcons" value="h_BK_blue" /><span class="blueDot"></span> Bandit King</label></div>-->
+
+
+                                <div><label><input type="radio" name="markIcons" value="t_TT_blue" /><span class="blueDot"></span> Top Tower</label></div>
+                                <div><label><input type="radio" name="markIcons" value="t_MT_blue" /><span class="blueDot"></span> Mid Tower</label></div>
+                                <div><label><input type="radio" name="markIcons" value="t_BT_blue" /><span class="blueDot"></span> Bottom Tower</label></div>
+
+                                <div><label><input type="radio" name="markIcons" value="m_TM1_blue" /><span class="blueDot"></span> Top Minion #1</label></div>
+                                <div><label><input type="radio" name="markIcons" value="m_TM2_blue" /><span class="blueDot"></span> Top Minion #2</label></div>
+
+                                <div><label><input type="radio" name="markIcons" value="m_MM1_blue" /><span class="blueDot"></span> Middle Minion #1</label></div>
+                                <div><label><input type="radio" name="markIcons" value="m_MM2_blue" /><span class="blueDot"></span> Middle Minion #2</label></div>
+
+                                <div><label><input type="radio" name="markIcons" value="m_BM1_blue" /><span class="blueDot"></span> Bottom Minion #1</label></div>
+                                <div><label><input type="radio" name="markIcons" value="m_BM2_blue" /><span class="blueDot"></span> Bottom Minion #2</label></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="bordHolder"></div>
+            </form>
+
 
         </div>
 

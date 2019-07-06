@@ -73,55 +73,107 @@ input[type=checkbox] {
     font-size: 16px;
 }
 
+.redDot {
+    color: red;
+}
+
+    .redDot:before {
+        content: "•";
+    }
+
+.blueDot {
+    color: blue;
+}
+
+    .blueDot:before {
+        content: "•";
+    }
+
+#gameNameHeading {
+    background-color: #efefef;
+    padding: 5px 4px;
+    margin: 0 0 8px 0;
+}
 
 
-#gameBoardBody #controlsHolder {
+
+#gameBoardForm #controlsHolder {
     float: right;
     background-color: #eaeaea;
     padding: 5px;
     border: solid 1px #ccc;
-    min-width: 24%;
+    min-width: 1%;
 }
 
-#gameBoardBody .bordHolder {
+    #gameBoardForm #controlsHolder .heading {
+        display: none;
+    }
+
+    #gameBoardForm #controlsHolder label:hover {
+        background-color: #f8f8f8;
+    }
+
+    #gameBoardForm #controlsHolder label.selectedCntlLabel {
+        background-color: #fff;
+    }
+
+
+.iconList {
+    margin: 0 0 16px 0;
+}
+
+.heroIcon {
+    font-weight: bold;
+    margin: 0 0 5px 0;
+}
+
+
+#gameBoardForm .bordHolder {
     display: table;
     border: solid 1px #ccc;
 }
 
-    #gameBoardBody .bordHolder.cellsClickable .bordCell {
+    #gameBoardForm .bordHolder.cellsClickable .bordCell {
         cursor: pointer;
     }
 
-#gameBoardBody .bordRow {
+
+#gameBoardForm .bordRow {
     overflow: hidden;
 }
 
-#gameBoardBody .bordCell {
+
+
+
+
+#gameBoardForm .bordCell {
     float: left;
     position: relative;
     border: solid 1px #ccc;
-    min-height: 50px;
-    min-width: 50px;
-    padding: 10px;
+    min-height: 31px;
+    min-width: 31px;
+    padding: 2px;
 }
 
-    #gameBoardBody .bordCell .cellId {
+    #gameBoardForm .bordCell .cellId {
         position: absolute;
         font-size: 9px;
         top: 0;
         right: 0;
         color: #ccc;
+        display: none;
     }
-
-    #gameBoardBody .bordCell .iconTopper {
-        min-height: 50px;
-        min-width: 50px;
-        border: dotted 1px #eaeaea;
+    /*#gameBoardForm .bordCell .iconTopper:before {
+        content: "..";
+    }*/
+    #gameBoardForm .bordCell .iconTopper {
+        min-height: 36px;
+        min-width: 36px;
         text-align: center;
-        line-height: 50px;
+        line-height: 36px;
     }
 
-#gameBoardBody .clickable {
+#gameBoardForm .clickable {
     color: blue;
     cursor: pointer;
 }

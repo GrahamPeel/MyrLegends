@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title></title>
-    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/main.css?foo=gibfsf" />
     <link rel="icon" href="data:;base64,iVBORwOKGO=" />
 
     <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js" crossorigin="anonymous" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"></script>
@@ -15,7 +15,7 @@
         var accountObj = FetchAccountObj();
 
         $(document).ready(function () {
-            if (accountObj.savedGames != null) {
+            if (accountObj.savedGames != null && accountObj.savedGames.length > 0) {
                 var source = document.getElementById("savedGameItems-template").innerHTML;
                 var template = Handlebars.compile(source);
                 var templateHtml = template(accountObj);
@@ -30,17 +30,6 @@
             window.location = "GameSheet.htm?id=" + newGame.id;
         }
 
-        function DeleteGame(a, id) {
-            var findResult = FindGameInAcctObjById(accountObj, id);
-            if (findResult != null) {
-                console.log(findResult.position);
-                accountObj.savedGames.splice(findResult.position, 1);
-                console.log(accountObj);
-                UpdateAccountObj(accountObj);
-                $(a).closest("li").hide();
-            }
-        }
-
     </script>
 
 </head>
@@ -51,24 +40,27 @@
         </header>
 
         <div>
-
             <ul id="linkList">
                 <li><a href="Calc.htm">Calculator</a></li>
-                <li><a href="GameBoard.htm">Game Board</a></li>
             </ul>
             <script id="savedGameItems-template" type="text/x-handlebars-template">
-                {{#each savedGames}}
-                <li>
-                    <a href="GameSheet.htm?id={{id}}">Resume Saved Game: {{name}}</a>
-                    <a href="#" onclick="DeleteGame(this, '{{id}}'); return false;"
-                       style="opacity: .5; display: inline-block; margin-left: 10px;">
-                        Delete
-                    </a>
+                <li style="margin-top: 10px;">
+                    Resume Saved Games:
+                    <ul>
+                        {{#each savedGames}}
+                        <li>
+                            <a style="font-size: 18px;" href="GameSheet.htm?id={{id}}">&ldquo;{{name}}&rdquo;</a>
+                            <a href="#" onclick="ConfirmDeleteGame(this, '{{id}}', 'Sure?'); return false;"
+                               style="opacity: .5; display: inline-block; margin-left: 0px;">
+                                Delete
+                            </a>
+                        </li>
+                        {{/each}}
+                    </ul>
                 </li>
-                {{/each}}
             </script>
 
-            <h3 style="margin: 50px 0 10px 0;">Start a New Game Sheet</h3>
+            <h3 style="margin: 50px 0 10px 0;">Start a New Battle</h3>
             <form onsubmit="StartNewGame(); return false;">
                 <table>
                     <thead>
@@ -96,7 +88,7 @@
                         </tr>
                         <tr>
                             <td></td>
-                            <td><input type="submit" value="Start Game" /></td>
+                            <td><input type="submit" value="Create Game" /></td>
                         </tr>
                     </tbody>
                 </table>
