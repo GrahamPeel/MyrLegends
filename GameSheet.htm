@@ -19,7 +19,7 @@
 
         $(document).ready(function () {
             var id = getUrlParameter("id");
-            currentGame = FindGameInAcctObjById(accountObj, id).gameObj;
+            currentGame = (FindGameInAcctObjById(accountObj, id) || { gameObj: null } ).gameObj;
             if (currentGame == null) {
                 window.location = "Index.htm?badGame=" + id;
                 return;
@@ -28,6 +28,7 @@
             SetupGameHeading(currentGame);
             SetUpHeroGrid();
             SetupGameBoard();
+            SetupCalculator();
 
             // fire change once for setup
             HandleWorkspaceChange();
@@ -51,258 +52,326 @@
                 <h2>
                     Game:
                     <span style="font-size: 28px; display: inline-block; margin: 0 10px;"></span>
-                    &nbsp;&nbsp;<input type="submit" class="saveBtn" value="Save Game"
-                                       onclick="$('form').submit(); return false;"/>
-
+                    &nbsp;&nbsp;
+                    <input type="submit" class="saveBtn" value="Save Game" onclick="SaveGame(); return false;" />
                     <select id="wspaceSelect" onchange="HandleWorkspaceChange();">
                         <option value="gameSheetForm" selected="selected">Game Sheet</option>
-                        <option value="gameBoardForm">Game board</option>
+                        <option value="gameBoardForm" >Game board</option>
+                        <option value="calculatorForm" >Calculator</option>
                     </select>
                 </h2>
             </div>
 
-            <form id="gameSheetForm"  style="display: none;" onsubmit="SaveGameSheet(); return false;">
+            <div id="workSpaceHolder">
 
-                <div style="float: right;">
-                    <table style="margin: 0 0 20px 0;" id="cooldownTbl">
-                        <thead>
+                <div class="workSpace" style="display: none;" id="gameSheetForm">
+
+                    <form onsubmit="return false;">
+
+                        <div style="float: right;">
+                            <table style="margin: 0 0 20px 0;" id="cooldownTbl">
+                                <thead>
+                                    <tr>
+                                        <th>Countdown</th>
+                                        <th>Rounds</th>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" min="0" max="20" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" min="0" max="20" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" min="0" max="20" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td>
+                                            <button onclick="EndRound(); return false;">End Round</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <!--<h3>Towers</h3>-->
+
+                            <table>
+                                <tr>
+                                    <th></th>
+                                    <th>Red Side</th>
+                                    <th>Blue Side</th>
+                                </tr>
+                                <tr>
+                                    <td>Top Tower</td>
+                                    <td><input class="smallNumber" type="text" id="p1_Ott" /></td>
+                                    <td><input class="smallNumber" type="text" id="p2_Ott" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Middle Tower</td>
+                                    <td><input class="smallNumber" type="text" id="p1_Otm" /></td>
+                                    <td><input class="smallNumber" type="text" id="p2_Otm" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Bottom Tower</td>
+                                    <td><input class="smallNumber" type="text" id="p1_Otb" /></td>
+                                    <td><input class="smallNumber" type="text" id="p2_Otb" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Top Minion #1</td>
+                                    <td><input class="smallNumber" type="text" id="p1_TopMin1" /></td>
+                                    <td><input class="smallNumber" type="text" id="p2_TopMin1" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Top Minion #2</td>
+                                    <td><input class="smallNumber" type="text" id="p1_TopMin2" /></td>
+                                    <td><input class="smallNumber" type="text" id="p2_TopMin2" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Middle Minion #1</td>
+                                    <td><input class="smallNumber" type="text" id="p1_MidMin1" /></td>
+                                    <td><input class="smallNumber" type="text" id="p2_MidMin1" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Middle Minion #2</td>
+                                    <td><input class="smallNumber" type="text" id="p1_MidMin2" /></td>
+                                    <td><input class="smallNumber" type="text" id="p2_MidMin2" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Bottom Minion #1</td>
+                                    <td><input class="smallNumber" type="text" id="p1_BotMin1" /></td>
+                                    <td><input class="smallNumber" type="text" id="p2_BotMin1" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Bottom Minion #2</td>
+                                    <td><input class="smallNumber" type="text" id="p1_BotMin2" /></td>
+                                    <td><input class="smallNumber" type="text" id="p2_BotMin2" /></td>
+                                </tr>
+                            </table>
+
+
+                        </div>
+
+                        <table id="heroDetails">
+                            <thead>
+                                <tr><th></th></tr>
+                            </thead>
+                            <tbody>
+                                <tr id="row_heroName">
+                                    <td>Character</td>
+                                    <td>
+                                        <select id="heroName_heroTick"><option>---</option></select>
+                                    </td>
+                                </tr>
+                                <tr id="row_heroLvl">
+                                    <td>Char. Level</td>
+                                    <td><input type="number" id="heroLvl_heroTick" min="1" max="11" /></td>
+                                </tr>
+                                <tr id="row_heroExp">
+                                    <td>Current Exp</td>
+                                    <td><input type="number" id="heroExp_heroTick" min="0" max="30" /></td>
+                                </tr>
+                                <tr id="row_heroNextExp">
+                                    <td>Exp for next level</td>
+                                    <td><input type="number" id="heroNextExp_heroTick" min="0" max="30" /></td>
+                                </tr>
+                                <tr id="row_heroBaseDmg">
+                                    <td>Base dmg</td>
+                                    <td><input type="text" id="heroBaseDmg_heroTick" /></td>
+                                </tr>
+                                <tr id="row_heroMvmt">
+                                    <td>Movement</td>
+                                    <td><input type="number" id="heroMvmt_heroTick" min="0" max="30" /></td>
+                                </tr>
+                                <tr id="row_heroCurrHealth">
+                                    <td>Currant health</td>
+                                    <td><input type="number" id="heroCurrHealth_heroTick" /></td>
+                                </tr>
+                                <tr id="row_heroMaxHealth">
+                                    <td>Max health</td>
+                                    <td><input type="number" id="heroMaxHealth_heroTick" /></td>
+                                </tr>
+                                <tr id="row_heroCurrMana">
+                                    <td>Current mana</td>
+                                    <td><input type="number" id="heroCurrMana_heroTick" /></td>
+                                </tr>
+                                <tr id="row_heroMaxMana">
+                                    <td>Max mana</td>
+                                    <td><input type="number" id="heroMaxMana_heroTick" /></td>
+                                </tr>
+                                <tr id="row_heroPozMods">
+                                    <td>Positive mods</td>
+                                    <td><input type="text" id="heroPozMods_heroTick" /></td>
+                                </tr>
+                                <tr id="row_heroNegMods">
+                                    <td>Negative mods</td>
+                                    <td><input type="text" id="heroNegMods_heroTick" /></td>
+                                </tr>
+                                <tr id="row_heroDodge">
+                                    <td>Dodge Chance</td>
+                                    <td><input type="text" id="heroDodge_heroTick" /></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                    </form>
+
+                </div>
+
+                <div class="workSpace" style="display: none;" id="gameBoardForm">
+
+                    <form onsubmit="return false;">
+
+                        <div id="controlsHolder">
+
+                            <div style="margin-bottom: 20px;">
+                                <h4>Select an Operation</h4>
+                                <select id="operationSelector" onchange="ChangeCurrentOperation();">
+                                    <option value="markTerrain" selected="selected">Mark Terrains</option>
+                                    <option value="markIcons">Mark Unit Locations</option>
+                                </select>
+                            </div>
+
+                            <div id="controlSections">
+                                <div class="controllSection" id="markTerrain" style="display: none;">
+                                    <span class="heading">Select a color to mark terrain squares</span>
+                                    <div>
+                                        <div><label><input type="radio" name="markTerrain" value="green" /> Green</label></div>
+                                        <div><label><input type="radio" name="markTerrain" value="grey" /> Gray</label></div>
+                                        <div><label><input type="radio" name="markTerrain" value="yellow" /> Yellow</label></div>
+                                        <div><label><input type="radio" name="markTerrain" value="brown" /> Brown</label></div>
+                                        <div><label><input type="radio" name="markTerrain" value="black" /> Black</label></div>
+                                        <div><label><input type="radio" name="markTerrain" value="transparent" /> Clear</label></div>
+                                    </div>
+                                </div>
+
+                                <div class="controllSection" id="markIcons" style="display: none;">
+
+                                    <span class="heading">Select a Hero/Minion/Tower to move</span>
+
+                                    <script id="heroIconMarkers-template" type="text/x-handlebars-template">
+                                        {{#each items}}
+                                        <div class="heroIcon">
+                                            <label>
+                                                <input type="radio" name="markIcons" value="{{valStr}}" />
+                                                <span class="{{color}}Dot"></span> {{name}}
+                                            </label>
+                                        </div>
+                                        {{/each}}
+                                    </script>
+
+                                    <div class="iconList">
+                                        <div id="redHerosTarget"></div>
+
+                                        <div><label><input type="radio" name="markIcons" value="t_TT_red" /><span class="redDot"></span> Top Tower</label></div>
+                                        <div><label><input type="radio" name="markIcons" value="t_MT_red" /><span class="redDot"></span> Mid Tower</label></div>
+                                        <div><label><input type="radio" name="markIcons" value="t_BT_red" /><span class="redDot"></span> Bottom Tower</label></div>
+
+                                        <div><label><input type="radio" name="markIcons" value="m_TM1_red" /><span class="redDot"></span> Top Minion #1</label></div>
+                                        <div><label><input type="radio" name="markIcons" value="m_TM2_red" /><span class="redDot"></span> Top Minion #2</label></div>
+
+                                        <div><label><input type="radio" name="markIcons" value="m_MM1_red" /><span class="redDot"></span> Middle Minion #1</label></div>
+                                        <div><label><input type="radio" name="markIcons" value="m_MM2_red" /><span class="redDot"></span> Middle Minion #2</label></div>
+
+                                        <div><label><input type="radio" name="markIcons" value="m_BM1_red" /><span class="redDot"></span> Bottom Minion #1</label></div>
+                                        <div><label><input type="radio" name="markIcons" value="m_BM2_red" /><span class="redDot"></span> Bottom Minion #2</label></div>
+
+                                    </div>
+
+                                    <div class="iconList">
+
+                                        <div id="blueHerosTarget"></div>
+
+                                        <div><label><input type="radio" name="markIcons" value="t_TT_blue" /><span class="blueDot"></span> Top Tower</label></div>
+                                        <div><label><input type="radio" name="markIcons" value="t_MT_blue" /><span class="blueDot"></span> Mid Tower</label></div>
+                                        <div><label><input type="radio" name="markIcons" value="t_BT_blue" /><span class="blueDot"></span> Bottom Tower</label></div>
+
+                                        <div><label><input type="radio" name="markIcons" value="m_TM1_blue" /><span class="blueDot"></span> Top Minion #1</label></div>
+                                        <div><label><input type="radio" name="markIcons" value="m_TM2_blue" /><span class="blueDot"></span> Top Minion #2</label></div>
+
+                                        <div><label><input type="radio" name="markIcons" value="m_MM1_blue" /><span class="blueDot"></span> Middle Minion #1</label></div>
+                                        <div><label><input type="radio" name="markIcons" value="m_MM2_blue" /><span class="blueDot"></span> Middle Minion #2</label></div>
+
+                                        <div><label><input type="radio" name="markIcons" value="m_BM1_blue" /><span class="blueDot"></span> Bottom Minion #1</label></div>
+                                        <div><label><input type="radio" name="markIcons" value="m_BM2_blue" /><span class="blueDot"></span> Bottom Minion #2</label></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="bordHolder"></div>
+                    </form>
+
+                </div>
+
+                <div class="workSpace" style="display: none;" id="calculatorForm">
+
+                    <form onsubmit="return false;">
+
+                        <table border="1" id="calcTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Die</th>
+                                    <th>Modifer</th>
+                                    <th>Base Multiplier</th>
+                                    <th>Conditional Multipliers</th>
+                                    <th></th>
+                                    <th>Result</th>
+                                    <th>Log</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <script id="entry-template" type="text/x-handlebars-template">
+                            {{#each diceTypes}}
                             <tr>
-                                <th>Countdown</th>
-                                <th>Rounds</th>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><input type="text" /></td>
-                                <td><input type="number" min="0" max="20" /></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" /></td>
-                                <td><input type="number" min="0" max="20" /></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" /></td>
-                                <td><input type="number" min="0" max="20" /></td>
-                            </tr>
-                            <tr>
-                                <td></td>
                                 <td>
-                                    <button onclick="EndRound(); return false;">End Round</button>
+                                    <input type="text" class="number" placeholder="1" maxlength="3" style="width: 30px; text-align: right;" />
+                                </td>
+                                <td>
+                                    d{{this}} <input type="hidden" value="{{this}}" class="size" />
+                                </td>
+                                <td>
+                                    +<input type="text" placeholder="0" class="mod" style="width: 30px;" />
+                                </td>
+                                <td>
+                                    <input type="text" class="baseMult" placeholder="1" style="width: 60px;" />
+                                </td>
+                                <td>
+                                    <input type="text" class="conditionalMults" placeholder="" style="width: 140px;" />
+                                </td>
+                                <td>
+                                    <button onclick="Calc(this);">go</button>
+                                </td>
+                                <td>
+                                    <span class="result"></span>
+                                </td>
+                                <td>
+                                    <span class="log"></span>
                                 </td>
                             </tr>
-                        </tbody>
-                    </table>
+                            {{/each}}
+                        </script>
 
-                    <!--<h3>Towers</h3>-->
+                    </form>
 
-                    <table>
-                        <tr>
-                            <th></th>
-                            <th>Red Side</th>
-                            <th>Blue Side</th>
-                        </tr>
-                        <tr>
-                            <td>Top Tower</td>
-                            <td><input class="smallNumber" type="text" id="p1_Ott" /></td>
-                            <td><input class="smallNumber" type="text" id="p2_Ott" /></td>
-                        </tr>
-                        <tr>
-                            <td>Middle Tower</td>
-                            <td><input class="smallNumber" type="text" id="p1_Otm" /></td>
-                            <td><input class="smallNumber" type="text" id="p2_Otm" /></td>
-                        </tr>
-                        <tr>
-                            <td>Bottom Tower</td>
-                            <td><input class="smallNumber" type="text" id="p1_Otb" /></td>
-                            <td><input class="smallNumber" type="text" id="p2_Otb" /></td>
-                        </tr>
-                        <tr>
-                            <td>Top Minion #1</td>
-                            <td><input class="smallNumber" type="text" id="p1_TopMin1" /></td>
-                            <td><input class="smallNumber" type="text" id="p2_TopMin1" /></td>
-                        </tr>
-                        <tr>
-                            <td>Top Minion #2</td>
-                            <td><input class="smallNumber" type="text" id="p1_TopMin2" /></td>
-                            <td><input class="smallNumber" type="text" id="p2_TopMin2" /></td>
-                        </tr>
-                        <tr>
-                            <td>Middle Minion #1</td>
-                            <td><input class="smallNumber" type="text" id="p1_MidMin1" /></td>
-                            <td><input class="smallNumber" type="text" id="p2_MidMin1" /></td>
-                        </tr>
-                        <tr>
-                            <td>Middle Minion #2</td>
-                            <td><input class="smallNumber" type="text" id="p1_MidMin2" /></td>
-                            <td><input class="smallNumber" type="text" id="p2_MidMin2" /></td>
-                        </tr>
-                        <tr>
-                            <td>Bottom Minion #1</td>
-                            <td><input class="smallNumber" type="text" id="p1_BotMin1" /></td>
-                            <td><input class="smallNumber" type="text" id="p2_BotMin1" /></td>
-                        </tr>
-                        <tr>
-                            <td>Bottom Minion #2</td>
-                            <td><input class="smallNumber" type="text" id="p1_BotMin2" /></td>
-                            <td><input class="smallNumber" type="text" id="p2_BotMin2" /></td>
-                        </tr>
-                    </table>
-
+                    <form style="margin-top: 30px;" onsubmit="HandleHPCalc(); return false;">
+                        Current HP<input type="text" style="width: 20px;" id="hpCalc_Current" value="" />&nbsp;&nbsp;
+                        Max HO<input type="text" style="width: 20px;" id="hpCalc_Max" value="" />&nbsp;
+                        ||&nbsp;
+                        New Current HP<input type="text" style="width: 20px;" id="hpCalc_NewMax" value="" />&nbsp;
+                        <button>Calculate new Max HP: </button>&nbsp;
+                        <span id="hpCalc_Label"></span>
+                    </form>
 
                 </div>
 
-                <table id="heroDetails">
-                    <thead>
-                        <tr><th></th></tr>
-                    </thead>
-                    <tbody>
-                        <tr id="row_heroName">
-                            <td>Character</td>
-                            <td>
-                                <select id="heroName_heroTick"><option>---</option></select>
-                            </td>
-                        </tr>
-                        <tr id="row_heroLvl">
-                            <td>Char. Level</td>
-                            <td><input type="number" id="heroLvl_heroTick" min="1" max="11" /></td>
-                        </tr>
-                        <tr id="row_heroExp">
-                            <td>Current Exp</td>
-                            <td><input type="number" id="heroExp_heroTick" min="0" max="30" /></td>
-                        </tr>
-                        <tr id="row_heroNextExp">
-                            <td>Exp for next level</td>
-                            <td><input type="number" id="heroNextExp_heroTick" min="0" max="30" /></td>
-                        </tr>
-                        <tr id="row_heroBaseDmg">
-                            <td>Base dmg</td>
-                            <td><input type="text" id="heroBaseDmg_heroTick" /></td>
-                        </tr>
-                        <tr id="row_heroMvmt">
-                            <td>Movement</td>
-                            <td><input type="number" id="heroMvmt_heroTick" min="0" max="30" /></td>
-                        </tr>
-                        <tr id="row_heroCurrHealth">
-                            <td>Currant health</td>
-                            <td><input type="number" id="heroCurrHealth_heroTick" /></td>
-                        </tr>
-                        <tr id="row_heroMaxHealth">
-                            <td>Max health</td>
-                            <td><input type="number" id="heroMaxHealth_heroTick" /></td>
-                        </tr>
-                        <tr id="row_heroCurrMana">
-                            <td>Current mana</td>
-                            <td><input type="number" id="heroCurrMana_heroTick" /></td>
-                        </tr>
-                        <tr id="row_heroMaxMana">
-                            <td>Max mana</td>
-                            <td><input type="number" id="heroMaxMana_heroTick" /></td>
-                        </tr>
-                        <tr id="row_heroPozMods">
-                            <td>Positive mods</td>
-                            <td><input type="text" id="heroPozMods_heroTick" /></td>
-                        </tr>
-                        <tr id="row_heroNegMods">
-                            <td>Negative mods</td>
-                            <td><input type="text" id="heroNegMods_heroTick" /></td>
-                        </tr>
-                        <tr id="row_heroDodge">
-                            <td>Dodge Chance</td>
-                            <td><input type="text" id="heroDodge_heroTick" /></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-            </form>
-
-
-            <form id="gameBoardForm" style="display: none;" onsubmit="SaveGameBoard(); return false;">
-
-                <div id="controlsHolder">
-
-                    <div style="margin-bottom: 20px;">
-                        <h4>Select an Operation</h4>
-                        <select id="operationSelector" onchange="ChangeCurrentOperation();">
-                            <option value="markTerrain" selected="selected">Mark Terrains</option>
-                            <option value="markIcons" >Mark Unit Locations</option>
-                        </select>
-                    </div>
-
-                    <div id="controlSections">
-                        <div class="controllSection" id="markTerrain" style="display: none;">
-                            <span class="heading">Select a color to mark terrain squares</span>
-                            <div>
-                                <div><label><input type="radio" name="markTerrain" value="green" /> Green</label></div>
-                                <div><label><input type="radio" name="markTerrain" value="grey" /> Gray</label></div>
-                                <div><label><input type="radio" name="markTerrain" value="yellow" /> Yellow</label></div>
-                                <div><label><input type="radio" name="markTerrain" value="brown" /> Brown</label></div>
-                                <div><label><input type="radio" name="markTerrain" value="black" /> Black</label></div>
-                                <div><label><input type="radio" name="markTerrain" value="transparent" /> Clear</label></div>
-                            </div>
-                        </div>
-
-                        <div class="controllSection" id="markIcons" style="display: none;">
-
-                            <span class="heading">Select a Hero/Minion/Tower to move</span>
-
-                            <script id="heroIconMarkers-template" type="text/x-handlebars-template">
-                                {{#each items}}
-                                <div class="heroIcon">
-                                    <label>
-                                        <input type="radio" name="markIcons" value="{{valStr}}" />
-                                        <span class="{{color}}Dot"></span> {{name}}
-                                    </label>
-                                </div>
-                                {{/each}}
-                            </script>
-
-                            <div class="iconList">
-                                <div id="redHerosTarget"></div>
-                                <!--<div class="heroIcon"><label><input type="radio" name="markIcons" value="h_GL_red" /><span class="redDot"></span> Golem</label></div>
-                        <div class="heroIcon"><label><input type="radio" name="markIcons" value="h_HM_red" /><span class="redDot"></span> Hitman</label></div>-->
-
-                                <div><label><input type="radio" name="markIcons" value="t_TT_red" /><span class="redDot"></span> Top Tower</label></div>
-                                <div><label><input type="radio" name="markIcons" value="t_MT_red" /><span class="redDot"></span> Mid Tower</label></div>
-                                <div><label><input type="radio" name="markIcons" value="t_BT_red" /><span class="redDot"></span> Bottom Tower</label></div>
-
-                                <div><label><input type="radio" name="markIcons" value="m_TM1_red" /><span class="redDot"></span> Top Minion #1</label></div>
-                                <div><label><input type="radio" name="markIcons" value="m_TM2_red" /><span class="redDot"></span> Top Minion #2</label></div>
-
-                                <div><label><input type="radio" name="markIcons" value="m_MM1_red" /><span class="redDot"></span> Middle Minion #1</label></div>
-                                <div><label><input type="radio" name="markIcons" value="m_MM2_red" /><span class="redDot"></span> Middle Minion #2</label></div>
-
-                                <div><label><input type="radio" name="markIcons" value="m_BM1_red" /><span class="redDot"></span> Bottom Minion #1</label></div>
-                                <div><label><input type="radio" name="markIcons" value="m_BM2_red" /><span class="redDot"></span> Bottom Minion #2</label></div>
-
-                            </div>
-
-                            <div class="iconList">
-
-                                <div id="blueHerosTarget"></div>
-                                <!--<div class="heroIcon"><label><input type="radio" name="markIcons" value="h_WG_blue" /><span class="blueDot"></span> Warforged Giant</label></div>
-                        <div class="heroIcon"><label><input type="radio" name="markIcons" value="h_BK_blue" /><span class="blueDot"></span> Bandit King</label></div>-->
-
-
-                                <div><label><input type="radio" name="markIcons" value="t_TT_blue" /><span class="blueDot"></span> Top Tower</label></div>
-                                <div><label><input type="radio" name="markIcons" value="t_MT_blue" /><span class="blueDot"></span> Mid Tower</label></div>
-                                <div><label><input type="radio" name="markIcons" value="t_BT_blue" /><span class="blueDot"></span> Bottom Tower</label></div>
-
-                                <div><label><input type="radio" name="markIcons" value="m_TM1_blue" /><span class="blueDot"></span> Top Minion #1</label></div>
-                                <div><label><input type="radio" name="markIcons" value="m_TM2_blue" /><span class="blueDot"></span> Top Minion #2</label></div>
-
-                                <div><label><input type="radio" name="markIcons" value="m_MM1_blue" /><span class="blueDot"></span> Middle Minion #1</label></div>
-                                <div><label><input type="radio" name="markIcons" value="m_MM2_blue" /><span class="blueDot"></span> Middle Minion #2</label></div>
-
-                                <div><label><input type="radio" name="markIcons" value="m_BM1_blue" /><span class="blueDot"></span> Bottom Minion #1</label></div>
-                                <div><label><input type="radio" name="markIcons" value="m_BM2_blue" /><span class="blueDot"></span> Bottom Minion #2</label></div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="bordHolder"></div>
-            </form>
-
+            </div>
 
         </div>
 

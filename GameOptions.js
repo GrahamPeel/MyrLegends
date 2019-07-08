@@ -49,10 +49,11 @@ function SetupGameHeading(currentGame) {
 }
 
 function HandleWorkspaceChange() {
-    $("#charsheetWrapper form").hide();
+    $("#workSpaceHolder .workSpace").hide();
     var vId = $("#wspaceSelect").val();
-    $("form#" + vId).show();
+    $("#" + vId).show();
 }
+
 
 function ParseGameDataIntoDict(blobData) {
     blobData = blobData || "";
@@ -63,7 +64,7 @@ function ParseGameDataIntoDict(blobData) {
         var keyName = segment[0];
         var keyValue = segment[1];
         if (!keyName) {
-            console.log("Bad key name from segment: " + segments[i]);
+            //console.log("Bad key name from segment: " + segments[i]);
             continue;
         }
         dict[keyName] = keyValue;
@@ -72,20 +73,115 @@ function ParseGameDataIntoDict(blobData) {
     return dict;
 }
 
+
+function SetupCalculator() {
+    var source = document.getElementById("entry-template").innerHTML;
+    var template = Handlebars.compile(source);
+    var context = { diceTypes: [4, 6, 8, 10, 12, 20, 100] };
+    var stuff = template(context);
+    $("#calcTable tbody").html(stuff);
+} 
+
+
+function HandleHPCalc() {
+
+    var currentHPinput = $("#hpCalc_Current");
+    var maxHPinput = $("#hpCalc_Max");
+    var newMaxHPinput = $("#hpCalc_NewMax");
+    var label = $("#hpCalc_Label");
+
+    console.log(currentHPinput.val() + maxHPinput.val() + newMaxHPinput.val());
+
+    var currentHP = parseFloat(currentHPinput.val());
+    var maxHP = parseFloat(maxHPinput.val());
+    var newMaxHP = parseFloat(newMaxHPinput.val());
+    var result = (newMaxHP / maxHP) * currentHP;
+    console.log(result);
+    label.html(isNaN(result) ? "bad input" : result);
+}
+
+
+function Calc(btn) {
+    var logMsg = "";
+    var tr = $(btn).closest("tr");
+
+    var number = parseInt(tr.find(".number").val());
+    number = isNaN(number) ? 1 : number;
+
+    var size = parseInt(tr.find(".size").val());
+
+    var mod = parseInt(tr.find(".mod").val());
+    mod = isNaN(mod) ? 0 : mod;
+
+    logMsg += number + "d" + size;
+    if (mod !== 0)
+        logMsg += (mod >= 0 ? "+" : "") + mod;
+
+    var baseMultiplier = parseFloat(tr.find(".baseMult").val());
+    baseMultiplier = isNaN(baseMultiplier) ? 1 : baseMultiplier;
+
+    var rollingCondMult = 1;
+    var condMultsRaw = $.trim(tr.find(".conditionalMults").val());
+    if (condMultsRaw) {
+        var condMultsArray = $.trim(tr.find(".conditionalMults").val()).split(" ");
+        for (var i = 0; i < condMultsArray.length; i++) {
+            var conMult = parseFloat(condMultsArray[i]);
+            if (isNaN(conMult))
+                alert("Bad Conditional Multiplier: " + conMult);
+            else
+                rollingCondMult += conMult;
+        }
+    }
+
+    logMsg += " x" + baseMultiplier + " (base) ";
+    logMsg += " x" + rollingCondMult + "(conditional) ";
+
+    var resultSpan = tr.find(".result");
+    var logSpan = tr.find(".log");
+
+    var rollingTotal = 0;
+    logMsg += " Rolls("
+    for (var i = 1; i <= number; i++) {
+        var roll = Math.floor((Math.random() * size) + 1);
+        logMsg += roll + " ";
+        rollingTotal += roll;
+        //var withMod = roll + mod;
+    }
+    logMsg += ")";
+    rollingTotal += mod;
+
+    rollingTotal = rollingTotal * baseMultiplier * rollingCondMult;
+
+    resultSpan.html(rollingTotal);
+    logSpan.html(logMsg);
+}
+
+
 function SetupGameBoard() {
 
     $(".bordHolder").each(function () {
         var bord = $(this);
         for (var i = 1; i <= numRows; i++) {
             var newRow = $("<div>", { "class": "bordRow" });
+            bord.append(newRow);
+
             for (var j = 1; j <= numCols; j++) {
                 var cellId = i + "-" + j;
                 var newCell = $("<div>", { "class": "bordCell", "id": "cell_" + cellId, "onclick": "HandleCellClick(this)" });
-                newCell.append($("<span>", { "class": "cellId" }).append(cellId));
-                newCell.append($("<div>", { "class": "iconTopper" }))
                 newRow.append(newCell);
+
+                var cellTerrainVal = $("<input>", { "type": "hidden", "class": "cellTerrainVal", "name": "cellTerrain_" + cellId });
+                newCell.append(cellTerrainVal);
+
+                var cellIdSpan = $("<span>", { "class": "cellId" }).append(cellId);
+                newCell.append(cellIdSpan);
+
+                var iconTopperDiv = $("<div>", { "class": "iconTopper" });
+                newCell.append(iconTopperDiv);
+
+                var iconTopperVal = $("<input>", { "type": "hidden", "class": "iconTopperVal", "name": "iconTopperVal_" + cellId });
+                newCell.append(iconTopperVal);
             }
-            bord.append(newRow);
         }
     });
 
@@ -97,11 +193,28 @@ function SetupGameBoard() {
     var template = Handlebars.compile(source);
 
     var savedItems = ParseGameDataIntoDict(currentGame.savedItems);
+    var savedGameBoardItems = ParseGameDataIntoDict(currentGame.savedGameBoardItems);
+
+    // repaint the terrain/icons from the saved data
+    for (var key in savedGameBoardItems) {
+        // check if the property/key is defined in the object itself, not in parent
+        if (savedGameBoardItems.hasOwnProperty(key)) {
+            var cell = $("input[name=" + key + "]").closest("div.bordCell");
+            if (key.indexOf("cellTerrain") === 0) {
+                var terrainCode = savedGameBoardItems[key];
+                PaintTerrainCell(cell, terrainCode);
+            }
+            else if (key.indexOf("iconTopperVal") == 0) {
+                var iconCode = savedGameBoardItems[key];
+                PaintIconCell(cell, iconCode);
+            }
+        }
+    }
 
     var redOptions = { items: [] };
     var blueOptions = { items: [] };
 
-    // look for the 10 character prop things.
+    // look for the (max) 10 character prop things.
     // AT THE POINT OF NEEDING A REAL DATA SERVICE I THINK, TO MATCH ID/NAME etc
     for (var i = i; i <= 10; i++) {
         //if (savedItems.hasOwnProperty('heroName_' + i)) {
@@ -129,16 +242,50 @@ function SetupGameBoard() {
     });
 }
 
+
 function GetSelectedOperationType() {
     return $("#operationSelector").val();
 }
 
+function DisplayError(errorMsg) {
+    console.log(errorMsg);
+}
+
+
+// Sets the bg color and pushes code into hiddenfield
+function PaintTerrainCell(cell, terrainCode) {
+    // Can expand terrainCode as needed, maybe split on _, for stuff like 'url_foo' instead of 'green'
+
+    $(cell).css("backgroundColor", terrainCode);
+    $(cell).find("input[type=hidden].cellTerrainVal").val(terrainCode)
+}
+
+// Sets the Icon text/color and pushes code into hiddenfield
+function PaintIconCell(cell, iconCode) {
+    if (!iconCode) return;
+    var iconCode_Frags = iconCode.split("_");
+    if (iconCode_Frags.length === 3) {
+        var iconTopper = $(cell).find(".iconTopper");
+
+        // should be just one in this .each,but ya never know.
+        $("div[data-iconTopperVal=" + iconCode + "]").each(function () {
+            $(this).removeAttr("data-iconTopperVal", iconCode);
+            $(this).html("");
+            $(this).css("backgroundColor", "transparent");
+        })
+
+        iconTopper.attr("data-iconTopperVal", iconCode);
+        iconTopper.html(iconCode_Frags[1]);
+        iconTopper.css("backgroundColor", iconCode_Frags[2]);
+
+        $(cell).find("input[type=hidden].iconTopperVal").val(iconCode)
+    }
+    // else -> problem
+}
+
 function HandleCellClick(cell) {
-    // determine what operation is selected from dropdown
-    //console.log(cell);
-    var selectedOperation = GetSelectedOperationType();
-    //console.log(selectedOperation);
-    switch (selectedOperation) {
+    // determine what operation has been selected from dropdown
+    switch (GetSelectedOperationType()) {
         case "markTerrain":
             handleTerrainMarkOperation(cell);
             break;
@@ -146,39 +293,26 @@ function HandleCellClick(cell) {
             handleIconmarkOperation(cell);
             break;
         default:
-            console.log("Dont know what to do!!");
+            DisplayError("Dont know what to do!!");
     }
 
     function handleTerrainMarkOperation(cell) {
         var terrainColor = $("input[name=markTerrain]:checked").val();
         if (!!terrainColor) {
-            $(cell).css("backgroundColor", terrainColor);
+            PaintTerrainCell(cell, terrainColor);
         }
-        // else problem
+        // else problem, no color selected
     }
 
     function handleIconmarkOperation(cell) {
         var iconCode = $("input[name=markIcons]:checked").val();
-        if (!iconCode) return;
-        var iconCode_Frags = iconCode.split("_");
-        if (!!iconCode && iconCode_Frags.length === 3) {
-            // remove the old icon placement, if any, then stamp the new one in
-            // if same icon is being dropped, its a deletion.
-            var iconTopper = $(cell).find(".iconTopper");
-
-            $("div[data-iconTopperVal=" + iconCode + "]").each(function () { // should be just one, ya never know.
-                $(this).removeAttr("data-iconTopperVal", iconCode);
-                $(this).html("");
-                $(this).css("backgroundColor", "transparent");
-            })
-
-            iconTopper.attr("data-iconTopperVal", iconCode);
-            iconTopper.html(iconCode_Frags[1]);
-            iconTopper.css("backgroundColor", iconCode_Frags[2]);
+        if (!!iconCode) {
+            PaintIconCell(cell, iconCode);
         }
-        // else problem
+        // else problem, no icon selected
     }
 }
+
 
 function ChangeCurrentOperation() {
     $("#controlSections .controllSection")
@@ -195,6 +329,7 @@ function ChangeCurrentOperation() {
     }
     operationDivToShow.show();
 }
+
 
 function SetUpHeroGrid() {
     // Setup the hero drop down selector (once before per-hero cloning)
@@ -245,6 +380,7 @@ function SetUpHeroGrid() {
 
 }
 
+
 function EndRound() {
     var tbl = $("#cooldownTbl");
     tbl.find("tbody tr").each(function () {
@@ -271,35 +407,49 @@ function EndRound() {
     });
 }
 
-function SaveGameSheet() {
+function SaveGame() {
 
-    function ConvertIdsToNameAttribs(form) {
-        $(form).find("input, select, textarea").each(function () {
-            var item = $(this);
-            if (!!item.attr("name") || !item.attr("id"))
-                return;
+    SaveGameSheet();
+    SaveGameBoard();
 
-            item.attr("name", item.attr("id"));
-            item.attr("data-dynamic-name", true);
-        });
-    }
-
-    function RemoveNameAttribs(form) {
-        $(form).find("*[data-dynamic-name]").each(function () {
-            $(this).removeAttr("data-dynamic-name");
-        });
-    }
-
-    var dataForm = $("#charsheetWrapper form");
-    ConvertIdsToNameAttribs(dataForm);
-    // keep original text of inputs
-    var savedItems = decodeURIComponent(dataForm.serialize().replace(/%2F/g, " "));
-    currentGame.savedItems = savedItems;
     UpdateAccountObj(accountObj);
 
-    RemoveNameAttribs(dataForm);
+    function SaveGameSheet() {
+        var dataForm = $("#gameSheetForm form");
+        ConvertIdsToNameAttribs(dataForm);
+        // keep original text of inputs
+        var savedItems = decodeURIComponent(dataForm.serialize().replace(/%2F/g, " "));
+        currentGame.savedItems = savedItems;
+        RemoveNameAttribs(dataForm);
+
+        function ConvertIdsToNameAttribs(form) {
+            $(form).find("input, select, textarea").each(function () {
+                var item = $(this);
+                if (!!item.attr("name") || !item.attr("id"))
+                    return;
+
+                item.attr("name", item.attr("id"));
+                item.attr("data-dynamic-name", true);
+            });
+        }
+
+        function RemoveNameAttribs(form) {
+            $(form).find("*[data-dynamic-name]").each(function () {
+                $(this).removeAttr("data-dynamic-name");
+            });
+        }
+    }
+
+
+    function SaveGameBoard() {
+        var s = "";
+        $(".bordHolder input[type=hidden]").each(function () {
+            var v = $(this).val();
+            if (!!v) {
+                s += $(this).attr("name") + "=" + v + "&"
+            }
+        });
+        currentGame.savedGameBoardItems = s;
+    }
 }
 
-function SaveGameBoard() {
-    console.log("board not saved yet!");
-}

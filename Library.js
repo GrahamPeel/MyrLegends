@@ -64,6 +64,7 @@ function FindGameInAcctObjById(accountObj, id) {
 function getDefaultSavedGameObj(heroCount, name) {
     return {
         savedItems: "",
+        savedGameBoardItems: "",
         heroCount: heroCount,
         name: name,
         id: createUUID()
@@ -73,7 +74,8 @@ function getDefaultSavedGameObj(heroCount, name) {
 // SAMPLE OF GAME CLASS
 var sampleAccountObj = {
     savedGames: [{
-        savedItems: "", // for a saved game, the form inputs are here
+        savedItems: "", // form.serialzie() -> for a saved game, the Board Form form inputs are here (needs newer name)
+        savedGameBoardItems: "", // form.serialzie() -> board terrains/icons
         heroCount: 4,
         name: "Battle at Gabe's",
         id: "B42A153F1D9A4F92990392C11DD684D2"
