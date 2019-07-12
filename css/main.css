@@ -96,6 +96,20 @@ input[type=checkbox] {
 }
 
 
+#gameNameHeading {
+    overflow: hidden;
+}
+
+    #gameNameHeading h2, #gameNameHeading .saveBtn {
+        float: left;
+        margin: 0 10px 0 0;
+    }
+
+    #gameNameHeading a {
+        float: right;
+        margin: 5px 5px 0 14px;
+    }
+
 
 #gameBoardForm #controlsHolder {
     float: right;
@@ -176,4 +190,19 @@ input[type=checkbox] {
 #gameBoardForm .clickable {
     color: blue;
     cursor: pointer;
+}
+
+
+#roundTrackerForm #attackStatus label {
+}
+
+#roundTrackerForm #attackStatus input {
+    zoom: 1.6;
+}
+
+#roundTrackerForm #attackStatus td {
+    text-align: center;
+}
+#roundTrackerForm #attackStatus td:first-child {
+    text-align: left;
 }

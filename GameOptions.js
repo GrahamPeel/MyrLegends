@@ -39,6 +39,34 @@ function GetHeroChoices() {
     ];
 }
 
+var SidesColorEnum = {
+    RED: 1,
+    BLUE: 2,
+    properties: {
+        1: { name: "Red", value: 1, code: "R" },
+        2: { name: "Blue", value: 2, code: "B" },
+    }
+};
+// var mySide = SidesColorEnum.RED;
+// var myCode = SidesColorEnum.properties[mySide].name; // myCode == "Red"
+
+
+function SetupRoundTracker() {
+    var i = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 ];
+    var data = {
+        colors: [
+            { color: "Red", code: "red", roundTrackerTicks: i },
+            { color: "Blue", code: "blue", roundTrackerTicks: i }
+        ]
+    };
+
+    var source = document.getElementById("roundTrackTable-template").innerHTML;
+    var template = Handlebars.compile(source);
+    var stuff = template(data);
+    $("#roundTrackerTarget").html(stuff);
+
+}
+
 
 function SetupGameHeading(currentGame) {
     // Game name, other details
@@ -48,9 +76,8 @@ function SetupGameHeading(currentGame) {
     switchLink.attr("href", switchLink.attr("href") + currentGame.id);
 }
 
-function HandleWorkspaceChange() {
+function HandleWorkspaceChange(vId) {
     $("#workSpaceHolder .workSpace").hide();
-    var vId = $("#wspaceSelect").val();
     $("#" + vId).show();
 }
 
@@ -155,6 +182,7 @@ function Calc(btn) {
     resultSpan.html(rollingTotal);
     logSpan.html(logMsg);
 }
+
 
 
 function SetupGameBoard() {
@@ -364,12 +392,22 @@ function SetUpHeroGrid() {
         }
         targetTd.remove();
     });
+}
 
+function FillFormsFromSavedItems() {
     // Pushed saved game data to elements, or push the starting-game defaults.
     if (!!currentGame.savedItems) {
         var savedItems = ParseGameDataIntoDict(currentGame.savedItems);
         for (var key in savedItems) {
-            $("#" + key).val(savedItems[key]);
+            var element = $("#" + key);
+            if (!!element) {
+                if (element.is(":checkbox")) {
+                    element.attr("checked", true);
+                }
+                else {
+                    element.val(savedItems[key]);
+                }
+            }
         }
     }
     else {
@@ -377,50 +415,60 @@ function SetUpHeroGrid() {
         $("#row_heroExp input").val("0");
         $("#row_heroNextExp input").val("2");
     }
-
 }
 
-
 function EndRound() {
-    var tbl = $("#cooldownTbl");
+    var tbl = $("#roundTrackerTarget table");
     tbl.find("tbody tr").each(function () {
-        var textInput = $(this).find("td").eq(0).find("input");
-        var text = textInput.val();
-        var countDownInput = $(this).find("td").eq(1).find("input");
-        var countDownVal = countDownInput.val();
-        if (!!text) {
+        var targetTbox = $(this).find("td").eq(0).find("input");
+        var effectTbox = $(this).find("td").eq(1).find("input");
+        var countDownTbox = $(this).find("td").eq(2).find("input");
+        var countDownVal = countDownTbox.val();
+        if (!!targetTbox.val()) {
             var count = parseInt(countDownVal);
-            console.log(count + " " + countDownVal);
             if (isNaN(count)) {
                 alert("Bad countdown: " + countDownVal);
                 return;
             }
             if (count == 0) {
-                countDownInput.val("");
-                textInput.val("");
+                countDownTbox.val("");
+                targetTbox.val("");
+                effectTbox.val("");
             }
             else {
                 count -= 1;
-                countDownInput.val(count);
+                countDownTbox.val(count);
             }
         }
+    });
+
+    $("#attackStatus input").each(function () {
+        $(this).prop("checked", false)
     });
 }
 
 function SaveGame() {
 
-    SaveGameSheet();
-    SaveGameBoard();
+    PushFormSheetDataToCurrentGame();
+    PushGameBoardDataToCurrentGame();
 
     UpdateAccountObj(accountObj);
 
-    function SaveGameSheet() {
-        var dataForm = $("#gameSheetForm form");
-        ConvertIdsToNameAttribs(dataForm);
-        // keep original text of inputs
-        var savedItems = decodeURIComponent(dataForm.serialize().replace(/%2F/g, " "));
-        currentGame.savedItems = savedItems;
-        RemoveNameAttribs(dataForm);
+
+    function PushFormSheetDataToCurrentGame() {
+        
+        currentGame.savedItems = "";
+
+        $("#gameSheetForm form, #roundTrackerForm form").each(function () {
+            var dataForm = $(this);
+            ConvertIdsToNameAttribs(dataForm);
+            // keep original text of inputs
+            var savedItems = decodeURIComponent(dataForm.serialize().replace(/%2F/g, " "));
+            currentGame.savedItems += savedItems + "&";
+            RemoveNameAttribs(dataForm);
+        });
+
+        currentGame.savedItems = currentGame.savedItems.substring(0, currentGame.savedItems.length - 1);
 
         function ConvertIdsToNameAttribs(form) {
             $(form).find("input, select, textarea").each(function () {
@@ -441,7 +489,7 @@ function SaveGame() {
     }
 
 
-    function SaveGameBoard() {
+    function PushGameBoardDataToCurrentGame() {
         var s = "";
         $(".bordHolder input[type=hidden]").each(function () {
             var v = $(this).val();

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CharacterSheet - LegendsOfMyradon</title>
+    <title>Game Sheet - Heroes of Myradon</title>
     <link rel="stylesheet" href="css/main.css" />
     <link rel="icon" href="data:;base64,iVBORwOKGO=" />
 
@@ -19,7 +19,7 @@
 
         $(document).ready(function () {
             var id = getUrlParameter("id");
-            currentGame = (FindGameInAcctObjById(accountObj, id) || { gameObj: null } ).gameObj;
+            currentGame = (FindGameInAcctObjById(accountObj, id) || { gameObj: null }).gameObj;
             if (currentGame == null) {
                 window.location = "Index.htm?badGame=" + id;
                 return;
@@ -27,11 +27,14 @@
 
             SetupGameHeading(currentGame);
             SetUpHeroGrid();
+            SetupRoundTracker();
             SetupGameBoard();
             SetupCalculator();
 
-            // fire change once for setup
-            HandleWorkspaceChange();
+            FillFormsFromSavedItems();
+
+            // Default panel
+            $("#gameNameHeading a").eq(3).click();
         });
 
     </script>
@@ -49,17 +52,13 @@
         <div id="charsheetWrapper">
 
             <div id="gameNameHeading">
-                <h2>
-                    Game:
-                    <span style="font-size: 28px; display: inline-block; margin: 0 10px;"></span>
-                    &nbsp;&nbsp;
-                    <input type="submit" class="saveBtn" value="Save Game" onclick="SaveGame(); return false;" />
-                    <select id="wspaceSelect" onchange="HandleWorkspaceChange();">
-                        <option value="gameSheetForm" selected="selected">Game Sheet</option>
-                        <option value="gameBoardForm" >Game board</option>
-                        <option value="calculatorForm" >Calculator</option>
-                    </select>
-                </h2>
+                <a href="#" onclick="HandleWorkspaceChange('gameBoardForm'); return false;">Game board</a>
+                <a href="#" onclick="HandleWorkspaceChange('calculatorForm'); return false;">Calculator</a>
+                <a href="#" onclick="HandleWorkspaceChange('roundTrackerForm'); return false;">Round Tracker</a>
+                <a href="#" onclick="HandleWorkspaceChange('gameSheetForm'); return false;">Game Sheet</a>
+
+                <h2>Game: <span style="font-size: 28px; display: inline-block; margin: 0 10px;"></span></h2>
+                <input type="submit" class="saveBtn" value="Save Game" onclick="SaveGame(); return false;" />
             </div>
 
             <div id="workSpaceHolder">
@@ -69,35 +68,6 @@
                     <form onsubmit="return false;">
 
                         <div style="float: right;">
-                            <table style="margin: 0 0 20px 0;" id="cooldownTbl">
-                                <thead>
-                                    <tr>
-                                        <th>Countdown</th>
-                                        <th>Rounds</th>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><input type="text" /></td>
-                                        <td><input type="number" min="0" max="20" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td><input type="text" /></td>
-                                        <td><input type="number" min="0" max="20" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td><input type="text" /></td>
-                                        <td><input type="number" min="0" max="20" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td></td>
-                                        <td>
-                                            <button onclick="EndRound(); return false;">End Round</button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                            <!--<h3>Towers</h3>-->
 
                             <table>
                                 <tr>
@@ -367,6 +337,99 @@
                         New Current HP<input type="text" style="width: 20px;" id="hpCalc_NewMax" value="" />&nbsp;
                         <button>Calculate new Max HP: </button>&nbsp;
                         <span id="hpCalc_Label"></span>
+                    </form>
+
+                </div>
+
+                <div class="workSpace" style="display: none;" id="roundTrackerForm">
+
+                    <script id="roundTrackTable-template" type="text/x-handlebars-template">
+                        {{#each colors}}
+                        <table style="float: left; margin: 0 20px 0 0;">
+                            <thead>
+                                <tr>
+                                    <th colspan="3">{{color}} Side Cooldown</th>
+                                </tr>
+                                <tr>
+                                    <th>Target</th>
+                                    <th>Effect</th>
+                                    <th>Rounds Left</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{#each roundTrackerTicks}}
+                                <tr>
+                                    <td><input type="text" id="{{../code}}_target_{{this}}" /></td>
+                                    <td><input type="text" id="{{../code}}_effect_{{this}}" /></td>
+                                    <td><input type="number" id="{{../code}}_counter_{{this}}" min="0" max="20" /></td>
+                                </tr>
+                                {{/each}}
+                            </tbody>
+                        </table>
+                        {{/each}}
+                    </script>
+
+                    <form onsubmit="return false;" style="overflow: hidden;">
+
+                        <div style="float: right;">
+                            <button style="font-size: 18px;" onclick="EndRound(); return false;">End Round</button>
+                        </div>
+
+                        <div id="roundTrackerTarget"></div>
+
+                        <table id="attackStatus">
+                            <tr>
+                                <th>Has Attacked:</th>
+                                <th>Red Side</th>
+                                <th>Blue Side</th>
+                            </tr>
+                            <tr>
+                                <td>Top Tower</td>
+                                <td><label><input type="checkbox" id="p1_Ott_attacked" /></label></td>
+                                <td><label><input type="checkbox" id="p2_Ott_attacked" /></label></td>
+                            </tr>
+                            <tr>
+                                <td>Middle Tower</td>
+                                <td><label><input type="checkbox" id="p1_Otm_attacked" /></label></td>
+                                <td><label><input type="checkbox" id="p2_Otm_attacked" /></label></td>
+                            </tr>
+                            <tr>
+                                <td>Bottom Tower</td>
+                                <td><label><input type="checkbox" id="p1_Otb_attacked" /></label></td>
+                                <td><label><input type="checkbox" id="p2_Otb_attacked" /></label></td>
+                            </tr>
+                            <tr>
+                                <td>Top Minion #1</td>
+                                <td><label><input type="checkbox" id="p1_TopMin1_attacked" /></label></td>
+                                <td><label><input type="checkbox" id="p2_TopMin1_attacked" /></label></td>
+                            </tr>
+                            <tr>
+                                <td>Top Minion #2</td>
+                                <td><label><input type="checkbox" id="p1_TopMin2_attacked" /></label></td>
+                                <td><label><input type="checkbox" id="p2_TopMin2_attacked" /></label></td>
+                            </tr>
+                            <tr>
+                                <td>Middle Minion #1</td>
+                                <td><label><input type="checkbox" id="p1_MidMin1_attacked" /></label></td>
+                                <td><label><input type="checkbox" id="p2_MidMin1_attacked" /></label></td>
+                            </tr>
+                            <tr>
+                                <td>Middle Minion #2</td>
+                                <td><label><input type="checkbox" id="p1_MidMin2_attacked" /></label></td>
+                                <td><label><input type="checkbox" id="p2_MidMin2_attacked" /></label></td>
+                            </tr>
+                            <tr>
+                                <td>Bottom Minion #1</td>
+                                <td><label><input type="checkbox" id="p1_BotMin1_attacked" /></label></td>
+                                <td><label><input type="checkbox" id="p2_BotMin1_attacked" /></label></td>
+                            </tr>
+                            <tr>
+                                <td>Bottom Minion #2</td>
+                                <td><label><input type="checkbox" id="p1_BotMin2_attacked" /></label></td>
+                                <td><label><input type="checkbox" id="p2_BotMin2_attacked" /></label></td>
+                            </tr>
+                        </table>
+
                     </form>
 
                 </div>
